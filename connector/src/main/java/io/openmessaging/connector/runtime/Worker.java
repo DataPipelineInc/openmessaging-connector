@@ -1,7 +1,6 @@
 package io.openmessaging.connector.runtime;
 
 import io.openmessaging.connector.api.Connector;
-import io.openmessaging.connector.runtime.rest.WorkerConfig;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.storage.PositionStorageService;

@@ -1,4 +1,4 @@
-package io.openmessaging.connector.runtime.rest;
+package io.openmessaging.connector.runtime;
 
 public class WorkerConfig {
   private String hostname;

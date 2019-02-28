@@ -3,6 +3,8 @@ package io.openmessaging.connector.runtime.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import io.openmessaging.connector.runtime.Processor;
+import io.openmessaging.connector.runtime.WorkerConfig;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.resources.ConnectorsResource;
 import org.eclipse.jetty.server.Handler;

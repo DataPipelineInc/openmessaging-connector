@@ -1,5 +1,6 @@
-package io.openmessaging.connector.runtime.rest;
+package io.openmessaging.connector.runtime;
 
+import io.openmessaging.connector.runtime.AbstractProcessor;
 import io.openmessaging.connector.runtime.Worker;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
