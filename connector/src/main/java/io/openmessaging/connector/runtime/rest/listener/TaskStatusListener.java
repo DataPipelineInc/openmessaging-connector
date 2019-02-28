@@ -29,7 +29,7 @@ public class TaskStatusListener implements StatusListener<ConnectorTaskId> {
   }
 
   @Override
-  public void onFailure(ConnectorTaskId connectorOrTaskId) {
+  public void onFailure(ConnectorTaskId connectorOrTaskId,Throwable throwable) {
 
   }
 }

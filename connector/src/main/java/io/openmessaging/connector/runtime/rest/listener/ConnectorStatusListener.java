@@ -27,7 +27,7 @@ public class ConnectorStatusListener implements StatusListener {
   }
 
   @Override
-  public void onFailure(Object connectorOrTaskId) {
+  public void onFailure(Object connectorOrTaskId,Throwable throwable) {
 
   }
 }
