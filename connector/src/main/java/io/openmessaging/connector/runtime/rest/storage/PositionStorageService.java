@@ -5,6 +5,12 @@ import io.openmessaging.connector.runtime.WorkerConfig;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * PositionStorageService is an interface for bulk storage of key-value pairs.Users can save
+ * position information to memory or save it where they need it. Usually the key is the queue and
+ * partition information, and the value is the location information. It only needs to support
+ * reading/writing bytes.
+ */
 public interface PositionStorageService {
 
   /** Start the position storage service. */

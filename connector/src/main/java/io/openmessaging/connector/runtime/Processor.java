@@ -8,6 +8,7 @@ import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
 import java.util.List;
 import java.util.Map;
 
+/** The main processor of the Connector and Task */
 public interface Processor {
   void start();
 

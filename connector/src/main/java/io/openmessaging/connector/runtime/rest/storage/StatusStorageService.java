@@ -5,6 +5,11 @@ import io.openmessaging.connector.runtime.rest.entities.ConnectorStatus;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.entities.TaskStatus;
 
+/**
+ * Status is an interface that saves the connector and task status.After the state of the connector
+ * or task is successfully changed, the method of this interface is called to save the latest state
+ * to the memory or the location specified by the user.
+ */
 public interface StatusStorageService {
 
   /** Start the status storage service. */
