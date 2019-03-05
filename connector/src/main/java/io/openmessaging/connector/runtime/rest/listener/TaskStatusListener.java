@@ -19,7 +19,7 @@ public class TaskStatusListener implements StatusListener<ConnectorTaskId> {
   }
 
   @Override
-  public void onStop(ConnectorTaskId connectorOrTaskId) {
+  public void onShutDown(ConnectorTaskId connectorOrTaskId) {
 
   }
 

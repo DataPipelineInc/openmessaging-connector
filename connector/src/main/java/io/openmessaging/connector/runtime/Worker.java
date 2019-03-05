@@ -78,18 +78,31 @@ public class Worker {
   }
 
   public void stopAndAwaitTasks(Collection<ConnectorTaskId> taskIds) {
-    for()
+    for (ConnectorTaskId taskId : taskIds) {
+      stopAndAwaitTask(taskId);
+    }
   }
 
   public void stopAndAwaitTask(ConnectorTaskId taskId) {}
 
-  public void stopTasks(Collection<ConnectorTaskId> taskIds) {}
+  public void stopTasks(Collection<ConnectorTaskId> taskIds) {
+    for (ConnectorTaskId taskId : taskIds) {
+      stopTask(taskId);
+    }
+  }
 
-  public void stopTask(ConnectorTaskId taskId) {}
+  public void stopTask(ConnectorTaskId taskId) {
+    WorkerTask workerTask = tasks.get(taskId);
+    workerTask.stop();
+  }
 
-  private void awaitTasks() {}
+  private void awaitTasks(Collection<ConnectorTaskId> taskIds) {
+    for (ConnectorTaskId taskId : taskIds) {
+      awaitTask(taskId);
+    }
+  }
 
-  private void awaitTask() {}
+  private void awaitTask(ConnectorTaskId taskId) {}
 
   public Plugins plugins() {
     return plugins;

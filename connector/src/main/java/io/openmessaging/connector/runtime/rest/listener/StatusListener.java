@@ -28,7 +28,7 @@ public interface StatusListener<T> {
    *
    * @param connectorOrTaskId the name of connector or the taskId of task.
    */
-  void onStop(T connectorOrTaskId);
+  void onShutDown(T connectorOrTaskId);
 
   /**
    * Invoked after the connector or task has been deleted.
