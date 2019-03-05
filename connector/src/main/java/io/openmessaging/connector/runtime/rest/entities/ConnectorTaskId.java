@@ -1,26 +1,47 @@
 package io.openmessaging.connector.runtime.rest.entities;
 
 public class ConnectorTaskId implements Comparable<ConnectorTaskId> {
-  private String connectorName;
-  private int taskId;
+  private String connector;
+  private int id;
 
-  public ConnectorTaskId(String connectorName, int taskId) {
-    this.connectorName = connectorName;
-    this.taskId = taskId;
+  public ConnectorTaskId(String connector, int id) {
+    this.connector = connector;
+    this.id = id;
   }
 
   public String getConnectorName() {
-    return connectorName;
+    return connector;
   }
 
   public int getTaskId() {
-    return taskId;
+    return id;
+  }
+
+  @Override
+  public int hashCode() {
+    int result = connector != null ? connector.hashCode() : 0;
+    result = 31 * result + id;
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+
+    ConnectorTaskId that = (ConnectorTaskId) o;
+
+    if (id != that.id) return false;
+    if (connector != null ? !connector.equals(that.connector) : that.connector != null)
+      return false;
+
+    return true;
   }
 
   @Override
   public int compareTo(ConnectorTaskId o) {
-    int connectorCmp = connectorName.compareTo(o.connectorName);
+    int connectorCmp = connector.compareTo(o.connector);
     if (connectorCmp != 0) return connectorCmp;
-    return Integer.compare(taskId, o.taskId);
+    return Integer.compare(id, o.id);
   }
 }
