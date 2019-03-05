@@ -34,17 +34,13 @@ public class StandaloneProcessor extends AbstractProcessor {
   public StandaloneProcessor(
       ConfigStorageService configStorageService,
       StatusStorageService statusStorageService,
-      ConfigListener configListener,
-      ConnectorStatusListener connectorStatusListener,
-      TaskStatusListener taskStatusListener,
-      ClusterStateConfig stateConfig,
       Worker worker) {
     this.configStorageService = configStorageService;
     this.statusStorageService = statusStorageService;
-    this.configListener = configListener;
+    this.configListener = new ConfigChangeListener();
     this.connectorStatusListener = connectorStatusListener;
     this.taskStatusListener = taskStatusListener;
-    this.stateConfig = stateConfig;
+    this.stateConfig = ClusterStateConfig.EMPTY;
     this.worker = worker;
     this.tempConnector = new HashMap<>();
   }
@@ -102,6 +98,17 @@ public class StandaloneProcessor extends AbstractProcessor {
     return ConnectorType.fromClass(connector.getClass());
   }
 
+  @Override
+  public void connectorInfo(String connectorName, CallBack<ConnectorInfo> callBack) {
+    if (stateConfig.contains(connectorName)) {
+      callBack.onCompletion(null, createConnectorInfo(connectorName));
+      return;
+    } else {
+      callBack.onCompletion(
+          new ConnectException("Not found the connector :" + connectorName), null);
+    }
+  }
+
   private Connector getConnector(String className) {
     if (!tempConnector.containsKey(className)) {
       Connector connector = plugins().newConnector(className);
@@ -132,7 +139,7 @@ public class StandaloneProcessor extends AbstractProcessor {
   private void removeConnectorTask(String connector) {
     List<ConnectorTaskId> taskIds = stateConfig.tasks(connector);
     if (!taskIds.isEmpty()) {
-      worker.stopAndAwaitTasksStop(taskIds);
+      worker.stopAndAwaitTasks(taskIds);
       configStorageService.removeTaskConfig(connector);
     }
   }
@@ -167,7 +174,7 @@ public class StandaloneProcessor extends AbstractProcessor {
   public void connectorConfig(String connector, CallBack<Map<String, String>> callBack) {}
 
   @Override
-  public void taskConfigs(String connector, CallBack<List<Map<String, String>>> callBack) {}
+  public void taskConfigs(String connector, CallBack<List<TaskInfo>> callBack) {}
 
   @Override
   public void connectorStatus(String connector, CallBack<ConnectorStateInfo> callBack) {}
@@ -190,5 +197,19 @@ public class StandaloneProcessor extends AbstractProcessor {
   @Override
   public boolean validateConnectorConfig(Map<String, String> configs) {
     return true;
+  }
+
+  public class ConfigChangeListener implements ConfigListener {
+    @Override
+    public void onConnectorConfigUpdate(String connector) {}
+
+    @Override
+    public void onConnectorConfigDelete(String connector) {}
+
+    @Override
+    public void onTaskConfigUpdate(ConnectorTaskId taskId) {}
+
+    @Override
+    public void onConnectorTargerStateUpdate(String connector) {}
   }
 }

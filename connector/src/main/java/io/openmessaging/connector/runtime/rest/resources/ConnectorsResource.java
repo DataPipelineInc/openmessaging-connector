@@ -5,6 +5,9 @@ import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
+import io.openmessaging.connector.runtime.rest.error.ConnectException;
+import io.openmessaging.connector.runtime.utils.CallBack;
+import io.openmessaging.connector.runtime.utils.FutureCallBack;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -31,28 +34,35 @@ public class ConnectorsResource {
 
   @POST
   @Path("/")
-  public Response createConnector(Map<String, String> connectorConfig) {
+  public ConnectorInfo createConnector(Map<String, String> connectorConfig) {
     String name = connectorConfig.get("name").trim();
-    ConnectorInfo connectorInfo = processor.putConnectorConfig(name, connectorConfig);
-    return Response.accepted().entity(connectorInfo).build();
+    FutureCallBack<ConnectorInfo> cb = new FutureCallBack<>();
+    processor.putConnectorConfig(name, connectorConfig, cb);
+    return waitCallBackComplete(cb);
   }
 
   @GET
   @Path("/{connector}")
   public ConnectorInfo getConnector(final @PathParam("connector") String connector) {
-    return processor.connectorConfig(connector);
+    FutureCallBack<ConnectorInfo> cb = new FutureCallBack<>();
+    processor.connectorInfo(connector, cb);
+    return waitCallBackComplete(cb);
   }
 
   @GET
   @Path("/{connector}/config")
   public Map<String, String> getConnectorConfig(@PathParam("connector") String connector) {
-    return processor.connectorConfig(connector).getConnectorConfig();
+    FutureCallBack<Map<String, String>> cb = new FutureCallBack<>();
+    processor.connectorConfig(connector, cb);
+    return waitCallBackComplete(cb);
   }
 
   @GET
   @Path("/{connector}/status")
   public ConnectorStateInfo getConnectorStatus(final @PathParam("connector") String connector) {
-    return processor.connectorStatus(connector);
+    FutureCallBack<ConnectorStateInfo> cb = new FutureCallBack<>();
+    processor.connectorStatus(connector, cb);
+    return waitCallBackComplete(cb);
   }
 
   @PUT
@@ -86,21 +96,27 @@ public class ConnectorsResource {
   @GET
   @Path("/{connector}/tasks")
   public List<TaskInfo> getTaskConfigs(@PathParam("connector") String connector) {
-    return processor.taskConfigs(connector);
+    FutureCallBack<List<TaskInfo>> cb = new FutureCallBack<>();
+    processor.taskConfigs(connector, cb);
+    return waitCallBackComplete(cb);
   }
 
   @POST
   @Path("/{connector}/tasks")
   public List<TaskInfo> putTaskConfigs(
       @PathParam("connector") String connector, List<Map<String, String>> taskConfigs) {
-    return processor.putTaskConfig(connector, taskConfigs);
+    FutureCallBack<List<TaskInfo>> cb = new FutureCallBack<>();
+    processor.putTaskConfig(connector, taskConfigs, cb);
+    return waitCallBackComplete(cb);
   }
 
   @GET
   @Path("/{connector}/tasks/{task}/status")
   public ConnectorStateInfo.TaskState getTaskStatus(
       @PathParam("connector") String connector, @PathParam("task") Integer task) {
-    return processor.taskStatus(new ConnectorTaskId(connector, task));
+    FutureCallBack<ConnectorStateInfo.TaskState> cb = new FutureCallBack<>();
+    processor.taskStatus(new ConnectorTaskId(connector, task), cb);
+    return waitCallBackComplete(cb);
   }
 
   @POST
@@ -110,5 +126,13 @@ public class ConnectorsResource {
     ConnectorTaskId taskId = new ConnectorTaskId(connector, task);
     processor.restartTask(taskId);
     return Response.accepted().build();
+  }
+
+  private <T> T waitCallBackComplete(FutureCallBack<T> callBack) {
+    try {
+      return callBack.get();
+    } catch (InterruptedException e) {
+      throw new ConnectException(e);
+    }
   }
 }

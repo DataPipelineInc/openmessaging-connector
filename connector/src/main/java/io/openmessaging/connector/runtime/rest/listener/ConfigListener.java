@@ -1,5 +1,6 @@
 package io.openmessaging.connector.runtime.rest.listener;
 
+import io.openmessaging.connector.runtime.TargetState;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 
 public interface ConfigListener {
@@ -22,4 +23,11 @@ public interface ConfigListener {
    * @param taskId the task`s is.
    */
   void onTaskConfigUpdate(ConnectorTaskId taskId);
+
+  /**
+   * Invoked when the user has set a new target state (e.g. paused).
+   *
+   * @param connector the connector`s name.
+   */
+  void onConnectorTargerStateUpdate(String connector);
 }

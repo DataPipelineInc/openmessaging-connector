@@ -1,6 +1,10 @@
 package io.openmessaging.connector.example.source;
 
 import io.openmessaging.KeyValue;
+import io.openmessaging.connector.api.data.DataEntryBuilder;
+import io.openmessaging.connector.api.data.Field;
+import io.openmessaging.connector.api.data.FieldType;
+import io.openmessaging.connector.api.data.Schema;
 import io.openmessaging.connector.api.data.SourceDataEntry;
 import io.openmessaging.connector.api.source.SourceTask;
 import io.openmessaging.internal.DefaultKeyValue;
@@ -13,6 +17,7 @@ import java.util.List;
 
 public class TestSourceTask extends SourceTask {
   private static final Logger log = LoggerFactory.getLogger(TestSourceTask.class);
+  private int i = 0;
 
   @Override
   public Collection<SourceDataEntry> poll() {

@@ -24,11 +24,13 @@ public interface Processor {
   void putTaskConfig(
       String connectorName, List<Map<String, String>> configs, CallBack<List<TaskInfo>> callBack);
 
+  void connectorInfo(String connectorName,CallBack<ConnectorInfo> callBack);
+
   void deleteConnectorConfig(String connector);
 
   void connectorConfig(String connector, CallBack<Map<String,String>> callBack);
 
-  void taskConfigs(String connector, CallBack<List<Map<String,String>>> callBack);
+  void taskConfigs(String connector, CallBack<List<TaskInfo>> callBack);
 
   void connectorStatus(String connector, CallBack<ConnectorStateInfo> callBack);
 

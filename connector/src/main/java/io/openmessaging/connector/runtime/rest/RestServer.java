@@ -58,7 +58,7 @@ public class RestServer {
     return listeners;
   }
 
-  private void startServer(Processor processor) {
+  public void startServer(Processor processor) {
     log.info("Starting REST Server");
 
     ResourceConfig resourceConfig = new ResourceConfig();
