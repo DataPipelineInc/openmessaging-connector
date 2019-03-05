@@ -2,9 +2,11 @@ package io.openmessaging.connector.runtime;
 
 import io.openmessaging.connector.api.Connector;
 import io.openmessaging.connector.runtime.distributed.ClusterStateConfig;
+import io.openmessaging.connector.runtime.isolation.Plugins;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
+import io.openmessaging.connector.runtime.rest.entities.ConnectorType;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.listener.ConfigListener;
@@ -14,10 +16,13 @@ import io.openmessaging.connector.runtime.rest.storage.ConfigStorageService;
 import io.openmessaging.connector.runtime.rest.storage.StatusStorageService;
 import io.openmessaging.connector.runtime.utils.CallBack;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class StandaloneProcessor extends AbstractProcessor {
+  private Map<String, Connector> tempConnector;
   private ConfigStorageService configStorageService;
   private StatusStorageService statusStorageService;
   private ConfigListener configListener;
@@ -26,17 +31,39 @@ public class StandaloneProcessor extends AbstractProcessor {
   private ClusterStateConfig stateConfig;
   private Worker worker;
 
-  public StandaloneProcessor() {}
+  public StandaloneProcessor(
+      ConfigStorageService configStorageService,
+      StatusStorageService statusStorageService,
+      ConfigListener configListener,
+      ConnectorStatusListener connectorStatusListener,
+      TaskStatusListener taskStatusListener,
+      ClusterStateConfig stateConfig,
+      Worker worker) {
+    this.configStorageService = configStorageService;
+    this.statusStorageService = statusStorageService;
+    this.configListener = configListener;
+    this.connectorStatusListener = connectorStatusListener;
+    this.taskStatusListener = taskStatusListener;
+    this.stateConfig = stateConfig;
+    this.worker = worker;
+    this.tempConnector = new HashMap<>();
+  }
 
   @Override
-  public void start() {}
+  public void start() {
+    this.configStorageService.start();
+    this.statusStorageService.start();
+  }
 
   @Override
-  public void stop() {}
+  public void stop() {
+    this.configStorageService.stop();
+    this.statusStorageService.stop();
+  }
 
   @Override
   public List<String> connectors() {
-    return null;
+    return new ArrayList<>(stateConfig.allConnector());
   }
 
   @Override
@@ -58,6 +85,30 @@ public class StandaloneProcessor extends AbstractProcessor {
       callBack.onCompletion(
           new ConnectException("Failed to start the connector : " + connectorName), null);
     }
+    createOrUpdateTaskConfig(connectorName);
+    callBack.onCompletion(null, createConnectorInfo(connectorName));
+  }
+
+  private ConnectorInfo createConnectorInfo(String connector) {
+    return new ConnectorInfo(
+        connector,
+        stateConfig.connectorConfig(connector),
+        stateConfig.tasks(connector),
+        getConnectorTypeFromClass(stateConfig.connectorConfig(connector).get("class")));
+  }
+
+  private ConnectorType getConnectorTypeFromClass(String className) {
+    Connector connector = getConnector(className);
+    return ConnectorType.fromClass(connector.getClass());
+  }
+
+  private Connector getConnector(String className) {
+    if (!tempConnector.containsKey(className)) {
+      Connector connector = plugins().newConnector(className);
+      tempConnector.put(className, connector);
+      return connector;
+    }
+    return tempConnector.get(className);
   }
 
   private void createOrUpdateTaskConfig(String connector) {
@@ -71,7 +122,7 @@ public class StandaloneProcessor extends AbstractProcessor {
   }
 
   private List<Map<String, String>> newTaskConfig(String connector) {
-    return null;
+    return worker.connectorTaskConfigs(connector);
   }
 
   private List<Map<String, String>> oldTaskConfig(String connector) {
@@ -91,6 +142,10 @@ public class StandaloneProcessor extends AbstractProcessor {
     for (ConnectorTaskId taskId : taskIds) {
       worker.startTask(taskId, stateConfig.taskConfig(taskId));
     }
+  }
+
+  private Plugins plugins() {
+    return this.worker.plugins();
   }
 
   @Override
