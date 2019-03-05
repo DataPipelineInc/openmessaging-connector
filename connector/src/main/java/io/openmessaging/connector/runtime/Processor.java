@@ -1,9 +1,11 @@
 package io.openmessaging.connector.runtime;
 
+import io.openmessaging.connector.api.Task;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
+import io.openmessaging.connector.runtime.utils.CallBack;
 
 import java.util.List;
 import java.util.Map;
@@ -16,23 +18,21 @@ public interface Processor {
 
   List<String> connectors();
 
-  ConnectorInfo putConnectorConfig(String connectorName, Map<String, String> connectorConfig);
+  void putConnectorConfig(
+      String connectorName, Map<String, String> config, CallBack<ConnectorInfo> callBack);
 
-  List<TaskInfo> putTaskConfig(String connectorName, List<Map<String, String>> taskConfigs);
-
-  boolean startConnector(String connectorName);
-
-  boolean startTask(ConnectorTaskId taskId);
+  void putTaskConfig(
+      String connectorName, List<Map<String, String>> configs, CallBack<List<TaskInfo>> callBack);
 
   void deleteConnectorConfig(String connector);
 
-  ConnectorInfo connectorConfig(String connector);
+  void connectorConfig(String connector, CallBack<Map<String,String>> callBack);
 
-  List<TaskInfo> taskConfigs(String connector);
+  void taskConfigs(String connector, CallBack<List<Map<String,String>>> callBack);
 
-  ConnectorStateInfo connectorStatus(String connector);
+  void connectorStatus(String connector, CallBack<ConnectorStateInfo> callBack);
 
-  ConnectorStateInfo.TaskState taskStatus(ConnectorTaskId taskId);
+  void taskStatus(ConnectorTaskId taskId, CallBack<ConnectorStateInfo.TaskState> callBack);
 
   void restartConnector(String connector);
 
@@ -42,5 +42,5 @@ public interface Processor {
 
   void resumeConnector(String connector);
 
-  void validateConnectorConfig(Map<String, String> configs);
+  boolean validateConnectorConfig(Map<String, String> configs);
 }

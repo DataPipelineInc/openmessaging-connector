@@ -1,9 +1,12 @@
 package io.openmessaging.connector.runtime.rest.storage;
 
+import io.openmessaging.connector.runtime.TargetState;
 import io.openmessaging.connector.runtime.WorkerConfig;
+import io.openmessaging.connector.runtime.distributed.ClusterStateConfig;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.listener.ConfigListener;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,10 +38,10 @@ public interface ConfigStorageService {
   /**
    * Create or update the configuration of the given task.
    *
-   * @param taskId the id of the task.
+   * @param connector the name of the connector.
    * @param taskConfig the new configuartion of the task.
    */
-  void putTaskConfig(ConnectorTaskId taskId, Map<String, String> taskConfig);
+  void putTaskConfig(String  connector, List<Map<String, String>> taskConfig);
 
   /**
    * Remove the configuration of an existing connector.
@@ -50,9 +53,9 @@ public interface ConfigStorageService {
   /**
    * Remove the configuration of an existing task.
    *
-   * @param taskId the id of the task.
+   * @param connectorName the name of the connector.
    */
-  void removeTaskConfig(ConnectorTaskId taskId);
+  void removeTaskConfig(String connectorName);
 
   /**
    * Check if the connector configuration exists.
@@ -69,4 +72,20 @@ public interface ConfigStorageService {
    * @param listener the config change listener.
    */
   void setConfigListener(ConfigListener listener);
+
+  /**
+   * Get configuration information and target state information of all connectors and tasks in the
+   * current cluster.
+   *
+   * @return Current cluster snapshot information.
+   */
+  ClusterStateConfig snapshot();
+
+  /**
+   * Change the state of the given connector to the given state.
+   *
+   * @param connector the name of the given connector.
+   * @param targetState the state the connector is to change.
+   */
+  void putTargetState(String connector, TargetState targetState);
 }

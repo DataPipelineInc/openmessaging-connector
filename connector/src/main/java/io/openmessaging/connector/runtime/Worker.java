@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -52,5 +53,9 @@ public class Worker {
   public boolean startTask(ConnectorTaskId taskId,Map<String,String> taskConfig){
 
     return true;
+  }
+
+  public void stopAndAwaitTasksStop(List<ConnectorTaskId> taskIds){
+
   }
 }

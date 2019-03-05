@@ -1,14 +1,18 @@
 package io.openmessaging.connector.runtime;
 
+import io.openmessaging.connector.api.Connector;
+import io.openmessaging.connector.runtime.distributed.ClusterStateConfig;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
+import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.listener.ConfigListener;
 import io.openmessaging.connector.runtime.rest.listener.ConnectorStatusListener;
 import io.openmessaging.connector.runtime.rest.listener.TaskStatusListener;
 import io.openmessaging.connector.runtime.rest.storage.ConfigStorageService;
 import io.openmessaging.connector.runtime.rest.storage.StatusStorageService;
+import io.openmessaging.connector.runtime.utils.CallBack;
 
 import java.util.List;
 import java.util.Map;
@@ -19,6 +23,7 @@ public class StandaloneProcessor extends AbstractProcessor {
   private ConfigListener configListener;
   private ConnectorStatusListener connectorStatusListener;
   private TaskStatusListener taskStatusListener;
+  private ClusterStateConfig stateConfig;
   private Worker worker;
 
   public StandaloneProcessor() {}
@@ -35,22 +40,67 @@ public class StandaloneProcessor extends AbstractProcessor {
   }
 
   @Override
-  public ConnectorInfo putConnectorConfig(
-      String connectorName, Map<String, String> connectorConfig) {
+  public void putConnectorConfig(
+      String connectorName, Map<String, String> config, CallBack<ConnectorInfo> callBack) {
+    if (!validateConnectorConfig(config)) {
+      callBack.onCompletion(
+          new ConnectException(
+              "The configuration of this connector did not pass the verification : " + config),
+          null);
+      return;
+    }
+    if (stateConfig.contains(connectorName)) {
+      callBack.onCompletion(
+          new ConnectException("Connector " + connectorName + " already exists"), null);
+      return;
+    }
+    if (!startConnector(connectorName, config)) {
+      callBack.onCompletion(
+          new ConnectException("Failed to start the connector : " + connectorName), null);
+    }
+  }
+
+  private void createOrUpdateTaskConfig(String connector) {
+    List<Map<String, String>> newConfig = newTaskConfig(connector);
+    List<Map<String, String>> oldConfig = oldTaskConfig(connector);
+    if (!oldConfig.equals(newConfig)) {
+      removeConnectorTask(connector);
+      configStorageService.putTaskConfig(connector, newConfig);
+      createConnectorTask(connector);
+    }
+  }
+
+  private List<Map<String, String>> newTaskConfig(String connector) {
     return null;
   }
 
-  @Override
-  public List<TaskInfo> putTaskConfig(String connectorName, List<Map<String, String>> taskConfigs) {
-    return null;
+  private List<Map<String, String>> oldTaskConfig(String connector) {
+    return stateConfig.allTaskConfigs(connector);
+  }
+
+  private void removeConnectorTask(String connector) {
+    List<ConnectorTaskId> taskIds = stateConfig.tasks(connector);
+    if (!taskIds.isEmpty()) {
+      worker.stopAndAwaitTasksStop(taskIds);
+      configStorageService.removeTaskConfig(connector);
+    }
+  }
+
+  private void createConnectorTask(String connector) {
+    List<ConnectorTaskId> taskIds = stateConfig.tasks(connector);
+    for (ConnectorTaskId taskId : taskIds) {
+      worker.startTask(taskId, stateConfig.taskConfig(taskId));
+    }
   }
 
   @Override
-  public boolean startConnector(String connectorName) {
+  public void putTaskConfig(
+      String connectorName, List<Map<String, String>> configs, CallBack<List<TaskInfo>> callBack) {}
+
+  public boolean startConnector(String connectorName, Map<String, String> config) {
     return false;
   }
 
-  @Override
   public boolean startTask(ConnectorTaskId taskId) {
     return false;
   }
@@ -59,24 +109,16 @@ public class StandaloneProcessor extends AbstractProcessor {
   public void deleteConnectorConfig(String connector) {}
 
   @Override
-  public ConnectorInfo connectorConfig(String connector) {
-    return null;
-  }
+  public void connectorConfig(String connector, CallBack<Map<String, String>> callBack) {}
 
   @Override
-  public List<TaskInfo> taskConfigs(String connector) {
-    return null;
-  }
+  public void taskConfigs(String connector, CallBack<List<Map<String, String>>> callBack) {}
 
   @Override
-  public ConnectorStateInfo connectorStatus(String connector) {
-    return null;
-  }
+  public void connectorStatus(String connector, CallBack<ConnectorStateInfo> callBack) {}
 
   @Override
-  public ConnectorStateInfo.TaskState taskStatus(ConnectorTaskId taskId) {
-    return null;
-  }
+  public void taskStatus(ConnectorTaskId taskId, CallBack<ConnectorStateInfo.TaskState> callBack) {}
 
   @Override
   public void restartConnector(String connector) {}
@@ -91,5 +133,7 @@ public class StandaloneProcessor extends AbstractProcessor {
   public void resumeConnector(String connector) {}
 
   @Override
-  public void validateConnectorConfig(Map<String, String> configs) {}
+  public boolean validateConnectorConfig(Map<String, String> configs) {
+    return true;
+  }
 }

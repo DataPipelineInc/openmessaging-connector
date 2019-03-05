@@ -1,6 +1,6 @@
 package io.openmessaging.connector.runtime.rest.entities;
 
-public class ConnectorTaskId {
+public class ConnectorTaskId implements Comparable<ConnectorTaskId> {
   private String connectorName;
   private int taskId;
 
@@ -15,5 +15,12 @@ public class ConnectorTaskId {
 
   public int getTaskId() {
     return taskId;
+  }
+
+  @Override
+  public int compareTo(ConnectorTaskId o) {
+    int connectorCmp = connectorName.compareTo(o.connectorName);
+    if (connectorCmp != 0) return connectorCmp;
+    return Integer.compare(taskId, o.taskId);
   }
 }

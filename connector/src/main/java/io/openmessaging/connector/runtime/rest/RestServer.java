@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import io.openmessaging.connector.runtime.Processor;
+import io.openmessaging.connector.runtime.Worker;
 import io.openmessaging.connector.runtime.WorkerConfig;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.resources.ConnectorsResource;
@@ -51,7 +52,9 @@ public class RestServer {
 
   private Map<String, Integer> getListeners(WorkerConfig workerConfig) {
     Map<String, Integer> listeners = new HashMap<>();
-    listeners.put(workerConfig.hostname(), workerConfig.port());
+    listeners.put(
+        workerConfig.getRestConfig().getString(WorkerConfig.REST_HOSTNAME),
+        workerConfig.getRestConfig().getInt(WorkerConfig.REST_PORT));
     return listeners;
   }
 
