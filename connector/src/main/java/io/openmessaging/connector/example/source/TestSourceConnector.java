@@ -3,6 +3,7 @@ package io.openmessaging.connector.example.source;
 import io.openmessaging.KeyValue;
 import io.openmessaging.connector.api.Task;
 import io.openmessaging.connector.api.source.SourceConnector;
+import io.openmessaging.internal.DefaultKeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +45,10 @@ public class TestSourceConnector extends SourceConnector {
 
   @Override
   public List<KeyValue> taskConfigs() {
-    return new ArrayList<>();
+    List<KeyValue> lists = new ArrayList<>();
+    KeyValue keyValue = new DefaultKeyValue();
+    keyValue.put(TaskConfig.TASK_CLASS_CONFIG, MySQLSourceTask.class.getName());
+    lists.add(keyValue);
+    return lists;
   }
 }
