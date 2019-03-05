@@ -1,16 +1,23 @@
 package io.openmessaging.connector.runtime;
 
 import io.openmessaging.KeyValue;
+import io.openmessaging.MessagingAccessPoint;
+import io.openmessaging.OMS;
 import io.openmessaging.connector.api.Connector;
+import io.openmessaging.connector.api.PositionStorageReader;
+import io.openmessaging.connector.api.Task;
+import io.openmessaging.connector.api.source.SourceTask;
 import io.openmessaging.connector.runtime.isolation.Plugins;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.storage.PositionStorageService;
+import io.openmessaging.connector.runtime.storage.PositionStorageWriter;
 import io.openmessaging.connector.runtime.utils.ConvertUtils;
+import io.openmessaging.internal.MessagingAccessPointAdapter;
+import io.openmessaging.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,6 +28,7 @@ import java.util.concurrent.Executors;
 
 public class Worker {
   private static final Logger log = LoggerFactory.getLogger(Worker.class);
+  private MessagingAccessPoint messagingAccessPoint;
   private WorkerConfig workerConfig;
   private ExecutorService executorService;
   private Map<String, WorkerConnector> connectors;
@@ -36,32 +44,62 @@ public class Worker {
     this.workerConfig = workerConfig;
     this.positionStorageService = positionStorageService;
     this.plugins = plugins;
+    this.messagingAccessPoint =
+        OMS.getMessagingAccessPoint(
+            workerConfig.getMessagingSystemConfig().getString("accessPoint"), OMS.newKeyValue());
   }
 
-  public boolean startConnector(String connectorName, Map<String, String> connectorConfig) {
-    String className = connectorConfig.get("connector.class");
-    try {
-      Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(className);
-      Connector connector =
-          ((Class<? extends Connector>) clazz).getDeclaredConstructor().newInstance();
-      WorkerConnector workerConnector = new WorkerConnector(connector);
-      workerConnector.initialize();
-      workerConnector.start();
-      connectors.put(connectorName, workerConnector);
-      return true;
-    } catch (ClassNotFoundException e) {
-      throw new ConnectException("Class not found : " + className);
-    } catch (IllegalAccessException
-        | InvocationTargetException
-        | InstantiationException
-        | NoSuchMethodException e) {
-      throw new ConnectException("Can not instance the connector : " + className);
-    }
-  }
-
-  public boolean startTask(ConnectorTaskId taskId, Map<String, String> taskConfig) {
-
+  public boolean startConnector(
+      String connectorName,
+      Map<String, String> connectorConfig,
+      TargetState targetState,
+      StandaloneProcessor.ConnectorStatusListener statusListener) {
+    Connector connector =
+        Plugins.newConnector(connectorConfig.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG));
+    WorkerConnector workerConnector =
+        new WorkerConnector(connector, connectorName, connectorConfig, statusListener);
+    workerConnector.initialize();
+    workerConnector.changeTargetState(targetState);
+    connectors.put(connectorName, workerConnector);
     return true;
+  }
+
+  public boolean startTask(
+      ConnectorTaskId taskId,
+      Map<String, String> taskConfig,
+      TargetState targetState,
+      StandaloneProcessor.TaskStatusListener statusListener) {
+    WorkerTask workerTask = buildWorkerTask(taskId, taskConfig, targetState, statusListener);
+    workerTask.initialize();
+    tasks.put(taskId, workerTask);
+    this.executorService.submit(workerTask);
+    return true;
+  }
+
+  private WorkerTask buildWorkerTask(
+      ConnectorTaskId taskId,
+      Map<String, String> taskConfig,
+      TargetState targetState,
+      StandaloneProcessor.TaskStatusListener statusListener) {
+    String taskClass = taskConfig.get(TaskConfig.TASK_CLASS_CONFIG);
+    Task task = plugins.newTask(taskClass);
+    if (task instanceof SourceTask) {
+      Producer producer = messagingAccessPoint.createProducer();
+      PositionStorageReader positionStorageReader =
+          new io.openmessaging.connector.runtime.storage.PositionStorageReader();
+      PositionStorageWriter positionStorageWriter = new PositionStorageWriter();
+      return new WorkerSourceTask(
+          taskId,
+          (SourceTask) task,
+          targetState,
+          statusListener,
+          workerConfig,
+          positionStorageReader,
+          positionStorageWriter,
+          taskConfig,
+          producer);
+    }
+    return null;
   }
 
   public List<Map<String, String>> connectorTaskConfigs(String connectorName) {
@@ -106,5 +144,23 @@ public class Worker {
 
   public Plugins plugins() {
     return plugins;
+  }
+
+  public void changeTargetState(TargetState targetState, String connector) {
+    WorkerConnector workerConnector = connectors.get(connector);
+    changeTargetState(workerConnector, targetState);
+    for (Map.Entry<ConnectorTaskId, WorkerTask> entry : tasks.entrySet()) {
+      if (entry.getKey().getConnectorName().equals(connector)) {
+        changeTargetState(entry.getValue(), targetState);
+      }
+    }
+  }
+
+  private void changeTargetState(Object workerConnectorOrTask, TargetState targetState) {
+    if (workerConnectorOrTask instanceof WorkerConnector) {
+      ((WorkerConnector) workerConnectorOrTask).changeTargetState(targetState);
+    } else if (workerConnectorOrTask instanceof WorkerTask) {
+      ((WorkerTask) workerConnectorOrTask).changeTargerState(targetState);
+    }
   }
 }

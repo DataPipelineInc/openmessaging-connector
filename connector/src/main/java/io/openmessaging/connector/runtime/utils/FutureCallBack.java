@@ -36,7 +36,7 @@ public class FutureCallBack<T> implements CallBack<T>, Future<T> {
 
   @Override
   public T get() throws InterruptedException {
-    this.finishDownLatch.wait();
+    this.finishDownLatch.await();
     return result();
   }
 

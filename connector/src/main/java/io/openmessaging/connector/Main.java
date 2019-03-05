@@ -18,8 +18,8 @@ import io.openmessaging.connector.runtime.storage.standalone.MemoryStatusStorage
 public class Main {
   public static void main(String[] args) {
     KeyValue restConfig = OMS.newKeyValue();
-    restConfig.put("hostname", "localhost");
-    restConfig.put("port", 2222);
+    restConfig.put(WorkerConfig.REST_HOSTNAME, "localhost");
+    restConfig.put(WorkerConfig.REST_PORT, 2222);
     KeyValue messagingSystemConfig = OMS.newKeyValue();
     messagingSystemConfig.put("accessPoint", "oms:rocketmq://wh:9876/default:default");
     WorkerConfig workerConfig =

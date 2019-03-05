@@ -1,7 +1,6 @@
 package io.openmessaging.connector.runtime;
 
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
-import io.openmessaging.connector.runtime.rest.listener.TaskStatusListener;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -10,13 +9,18 @@ public abstract class WorkerTask implements Runnable {
   private TargetState targetState;
   private boolean stopping;
   private CountDownLatch shutDownLatch = new CountDownLatch(1);
-  private TaskStatusListener listener;
+  private StandaloneProcessor.TaskStatusListener listener;
 
-  public WorkerTask(ConnectorTaskId taskId, TargetState targetState, TaskStatusListener listener) {
+  public WorkerTask(
+      ConnectorTaskId taskId,
+      TargetState targetState,
+      StandaloneProcessor.TaskStatusListener listener) {
     this.taskId = taskId;
     this.targetState = targetState;
     this.listener = listener;
   }
+
+  public void initialize() {}
 
   @Override
   public void run() {

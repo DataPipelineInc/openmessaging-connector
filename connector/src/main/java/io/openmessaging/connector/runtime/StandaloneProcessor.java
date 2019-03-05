@@ -10,13 +10,13 @@ import io.openmessaging.connector.runtime.rest.entities.ConnectorType;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.listener.ConfigListener;
-import io.openmessaging.connector.runtime.rest.listener.ConnectorStatusListener;
-import io.openmessaging.connector.runtime.rest.listener.TaskStatusListener;
+import io.openmessaging.connector.runtime.rest.listener.StatusListener;
 import io.openmessaging.connector.runtime.rest.storage.ConfigStorageService;
 import io.openmessaging.connector.runtime.rest.storage.StatusStorageService;
 import io.openmessaging.connector.runtime.utils.CallBack;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +38,12 @@ public class StandaloneProcessor extends AbstractProcessor {
     this.configStorageService = configStorageService;
     this.statusStorageService = statusStorageService;
     this.configListener = new ConfigChangeListener();
-    this.connectorStatusListener = connectorStatusListener;
-    this.taskStatusListener = taskStatusListener;
+    this.connectorStatusListener = new ConnectorStatusListener();
+    this.taskStatusListener = new TaskStatusListener();
     this.stateConfig = ClusterStateConfig.EMPTY;
     this.worker = worker;
     this.tempConnector = new HashMap<>();
+    this.configStorageService.setConfigListener(this.configListener);
   }
 
   @Override
@@ -80,6 +81,7 @@ public class StandaloneProcessor extends AbstractProcessor {
     if (!startConnector(connectorName, config)) {
       callBack.onCompletion(
           new ConnectException("Failed to start the connector : " + connectorName), null);
+      return;
     }
     createOrUpdateTaskConfig(connectorName);
     callBack.onCompletion(null, createConnectorInfo(connectorName));
@@ -90,7 +92,8 @@ public class StandaloneProcessor extends AbstractProcessor {
         connector,
         stateConfig.connectorConfig(connector),
         stateConfig.tasks(connector),
-        getConnectorTypeFromClass(stateConfig.connectorConfig(connector).get("class")));
+        getConnectorTypeFromClass(
+            stateConfig.connectorConfig(connector).get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
   }
 
   private ConnectorType getConnectorTypeFromClass(String className) {
@@ -124,7 +127,7 @@ public class StandaloneProcessor extends AbstractProcessor {
     if (!oldConfig.equals(newConfig)) {
       removeConnectorTask(connector);
       configStorageService.putTaskConfig(connector, newConfig);
-      createConnectorTask(connector);
+      createConnectorTask(connector, stateConfig.targetState(connector));
     }
   }
 
@@ -144,10 +147,10 @@ public class StandaloneProcessor extends AbstractProcessor {
     }
   }
 
-  private void createConnectorTask(String connector) {
+  private void createConnectorTask(String connector, TargetState initState) {
     List<ConnectorTaskId> taskIds = stateConfig.tasks(connector);
     for (ConnectorTaskId taskId : taskIds) {
-      worker.startTask(taskId, stateConfig.taskConfig(taskId));
+      worker.startTask(taskId, stateConfig.taskConfig(taskId), initState, this.taskStatusListener);
     }
   }
 
@@ -160,7 +163,10 @@ public class StandaloneProcessor extends AbstractProcessor {
       String connectorName, List<Map<String, String>> configs, CallBack<List<TaskInfo>> callBack) {}
 
   public boolean startConnector(String connectorName, Map<String, String> config) {
-    return false;
+    configStorageService.putConnectorConfig(connectorName, config);
+    TargetState targetState = stateConfig.targetState(connectorName);
+    worker.startConnector(connectorName, config, targetState, this.connectorStatusListener);
+    return true;
   }
 
   public boolean startTask(ConnectorTaskId taskId) {
@@ -199,17 +205,80 @@ public class StandaloneProcessor extends AbstractProcessor {
     return true;
   }
 
-  public class ConfigChangeListener implements ConfigListener {
+  private class ConfigChangeListener implements ConfigListener {
     @Override
-    public void onConnectorConfigUpdate(String connector) {}
+    public void onConnectorConfigUpdate(String connector) {
+      synchronized (StandaloneProcessor.class) {
+        stateConfig = configStorageService.snapshot();
+      }
+    }
 
     @Override
-    public void onConnectorConfigDelete(String connector) {}
+    public void onConnectorConfigDelete(String connector) {
+      synchronized (StandaloneProcessor.class) {
+        stateConfig = configStorageService.snapshot();
+      }
+    }
 
     @Override
-    public void onTaskConfigUpdate(ConnectorTaskId taskId) {}
+    public void onTaskConfigUpdate(Collection<ConnectorTaskId> taskId) {
+      synchronized (StandaloneProcessor.class) {
+        stateConfig = configStorageService.snapshot();
+      }
+    }
 
     @Override
-    public void onConnectorTargerStateUpdate(String connector) {}
+    public void onConnectorTargerStateUpdate(String connector) {
+      synchronized (StandaloneProcessor.class) {
+        stateConfig = configStorageService.snapshot();
+        TargetState targetState = stateConfig.targetState(connector);
+        worker.changeTargetState(targetState, connector);
+        if (targetState == TargetState.STARTED) {
+          createOrUpdateTaskConfig(connector);
+        }
+      }
+    }
+  }
+
+  public class ConnectorStatusListener implements StatusListener<String> {
+
+    @Override
+    public void onStartUp(String connectorOrTaskId) {}
+
+    @Override
+    public void onPause(String connectorOrTaskId) {}
+
+    @Override
+    public void onResume(String connectorOrTaskId) {}
+
+    @Override
+    public void onShutDown(String connectorOrTaskId) {}
+
+    @Override
+    public void onDeletion(String connectorOrTaskId) {}
+
+    @Override
+    public void onFailure(String connectorOrTaskId, Throwable throwable) {}
+  }
+
+  public class TaskStatusListener implements StatusListener<ConnectorTaskId> {
+
+    @Override
+    public void onStartUp(ConnectorTaskId connectorOrTaskId) {}
+
+    @Override
+    public void onPause(ConnectorTaskId connectorOrTaskId) {}
+
+    @Override
+    public void onResume(ConnectorTaskId connectorOrTaskId) {}
+
+    @Override
+    public void onShutDown(ConnectorTaskId connectorOrTaskId) {}
+
+    @Override
+    public void onDeletion(ConnectorTaskId connectorOrTaskId) {}
+
+    @Override
+    public void onFailure(ConnectorTaskId connectorOrTaskId, Throwable throwable) {}
   }
 }

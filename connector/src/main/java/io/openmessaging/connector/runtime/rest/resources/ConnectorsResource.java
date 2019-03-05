@@ -4,6 +4,7 @@ import io.openmessaging.connector.runtime.Processor;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
+import io.openmessaging.connector.runtime.rest.entities.CreateConnectorRequest;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.utils.CallBack;
@@ -34,10 +35,10 @@ public class ConnectorsResource {
 
   @POST
   @Path("/")
-  public ConnectorInfo createConnector(Map<String, String> connectorConfig) {
-    String name = connectorConfig.get("name").trim();
+  public ConnectorInfo createConnector(CreateConnectorRequest request) {
+    String name = request.getName().trim();
     FutureCallBack<ConnectorInfo> cb = new FutureCallBack<>();
-    processor.putConnectorConfig(name, connectorConfig, cb);
+    processor.putConnectorConfig(name, request.getConfig(), cb);
     return waitCallBackComplete(cb);
   }
 

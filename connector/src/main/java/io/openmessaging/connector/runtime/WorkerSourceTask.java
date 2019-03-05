@@ -6,7 +6,6 @@ import io.openmessaging.connector.api.PositionStorageReader;
 import io.openmessaging.connector.api.data.SourceDataEntry;
 import io.openmessaging.connector.api.source.SourceTask;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
-import io.openmessaging.connector.runtime.rest.listener.TaskStatusListener;
 import io.openmessaging.connector.runtime.storage.PositionStorageWriter;
 import io.openmessaging.connector.runtime.utils.ConvertUtils;
 import io.openmessaging.producer.Producer;
@@ -31,7 +30,7 @@ public class WorkerSourceTask extends WorkerTask {
       ConnectorTaskId taskId,
       SourceTask sourceTask,
       TargetState targetState,
-      TaskStatusListener listener,
+      StandaloneProcessor.TaskStatusListener listener,
       WorkerConfig workerConfig,
       PositionStorageReader positionStorageReader,
       PositionStorageWriter positionStorageWriter,
@@ -44,6 +43,11 @@ public class WorkerSourceTask extends WorkerTask {
     this.sourceTask = sourceTask;
     this.config = ConvertUtils.mapToKeyValue(config);
     this.producer = producer;
+  }
+
+  public void initialize() {
+    super.initialize();
+    this.producer.startup();
   }
 
   @Override
