@@ -1,12 +1,17 @@
 package io.openmessaging.connector.runtime.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.openmessaging.KeyValue;
 import io.openmessaging.OMS;
+import io.openmessaging.connector.runtime.rest.error.ConnectException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class ConvertUtils {
+  private static final ObjectMapper objectMapper = new ObjectMapper();
+
   public static Map<String, String> keyValueToMap(KeyValue keyValue) {
     Map<String, String> map = new HashMap<>();
     for (String key : keyValue.keySet()) {
@@ -21,5 +26,13 @@ public class ConvertUtils {
       keyValue.put(entry.getKey(), entry.getValue());
     }
     return keyValue;
+  }
+
+  public static byte[] getBytesfromObject(Object o) {
+    try {
+      return objectMapper.writeValueAsBytes(o);
+    } catch (JsonProcessingException e) {
+      throw new ConnectException(e);
+    }
   }
 }

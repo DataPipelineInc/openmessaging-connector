@@ -74,8 +74,13 @@ public class WorkerSourceTask extends WorkerTask {
   }
 
   private void sendMessages() {
-    for(SourceDataEntry dataEntry:toSend){
-      Message message = this.producer.createBytesMessage()
+    for (SourceDataEntry dataEntry : toSend) {
+      Message message =
+          this.producer.createBytesMessage(
+              dataEntry.getQueueName(), ConvertUtils.getBytesfromObject(dataEntry.getPayload()));
+      byte[] sourcePartition = dataEntry.getSourcePartition();
+      byte[] sourcePosition = dataEntry.getSourcePosition();
+      this.producer.send(message);
     }
   }
 

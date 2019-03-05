@@ -47,6 +47,7 @@
         <slf4j.version>1.7.21</slf4j.version>
         <lang3.version>3.6</lang3.version>
         <jetty.version>9.2.22.v20170606</jetty.version>
+        <rocketmq.version>4.4.0</rocketmq.version>
     </properties>
 
     <build>
@@ -161,6 +162,11 @@
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>${lang3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-openmessaging</artifactId>
+                <version>${rocketmq.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
