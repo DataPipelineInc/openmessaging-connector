@@ -46,7 +46,6 @@ public abstract class WorkerTask implements Runnable {
           return;
         }
       }
-      onStartUp();
       execute();
     } finally {
       doClose();
@@ -55,7 +54,7 @@ public abstract class WorkerTask implements Runnable {
 
   private void doClose() {}
 
-  public void triggerStop() {
+  private void triggerStop() {
     synchronized (this) {
       this.stopping = true;
       this.notifyAll();
@@ -72,8 +71,13 @@ public abstract class WorkerTask implements Runnable {
     }
   }
 
-  private void awaitStop() throws InterruptedException {
-    this.shutDownLatch.await();
+  public boolean awaitStop() {
+    try {
+      this.shutDownLatch.await();
+      return true;
+    } catch (InterruptedException e) {
+      return false;
+    }
   }
 
   public abstract void execute();

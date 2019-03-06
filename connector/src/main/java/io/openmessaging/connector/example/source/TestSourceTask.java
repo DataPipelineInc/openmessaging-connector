@@ -35,6 +35,11 @@ public class TestSourceTask extends SourceTask {
               .buildSourceDataEntry("partition01".getBytes(), ("position" + i).getBytes()));
       index++;
     }
+    try {
+      Thread.sleep(5000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     return lists;
   }
 

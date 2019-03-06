@@ -5,7 +5,6 @@ public abstract class AbstractStatus<T> {
     UNASSIGNED,
     RUNNING,
     PAUSED,
-    STOPPED,
     FAILED,
     DESTROYED
   }

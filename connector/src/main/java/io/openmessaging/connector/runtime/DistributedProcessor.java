@@ -34,7 +34,7 @@ public class DistributedProcessor extends AbstractProcessor {
   public void connectorInfo(String connectorName, CallBack<ConnectorInfo> callBack) {}
 
   @Override
-  public void deleteConnectorConfig(String connector) {}
+  public void deleteConnectorConfig(String connector,CallBack<ConnectorInfo> callBack) {}
 
   @Override
   public void connectorConfig(String connector, CallBack<Map<String, String>> callBack) {}

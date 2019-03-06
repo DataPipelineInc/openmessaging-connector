@@ -78,6 +78,10 @@ public class WorkerConnector {
           connector.start();
           this.state = State.STARTED;
           return true;
+        case PAUSED:
+          connector.resume();
+          this.state = State.STARTED;
+          return true;
         default:
           throw new IllegalArgumentException("Cannot start connector in state " + state);
       }
@@ -97,7 +101,7 @@ public class WorkerConnector {
           connector.pause();
         case INIT:
           statusListener.onPause(connectorName);
-          this.state = State.STOPPED;
+          this.state = State.PAUSED;
           break;
         default:
           throw new IllegalArgumentException("Cannot pause connector in state " + state);

@@ -3,11 +3,14 @@ package io.openmessaging.connector.runtime;
 import io.openmessaging.connector.api.Connector;
 import io.openmessaging.connector.runtime.distributed.ClusterStateConfig;
 import io.openmessaging.connector.runtime.isolation.Plugins;
+import io.openmessaging.connector.runtime.rest.entities.AbstractStatus;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
+import io.openmessaging.connector.runtime.rest.entities.ConnectorStatus;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorType;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
+import io.openmessaging.connector.runtime.rest.entities.TaskStatus;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.listener.ConfigListener;
 import io.openmessaging.connector.runtime.rest.listener.StatusListener;
@@ -108,7 +111,8 @@ public class StandaloneProcessor extends AbstractProcessor {
       return;
     } else {
       callBack.onCompletion(
-          new ConnectException("Not found the connector :" + connectorName), null);
+          new ConnectException("The connector does not exist ; " + connectorName), null);
+      return;
     }
   }
 
@@ -160,7 +164,12 @@ public class StandaloneProcessor extends AbstractProcessor {
 
   @Override
   public void putTaskConfig(
-      String connectorName, List<Map<String, String>> configs, CallBack<List<TaskInfo>> callBack) {}
+      String connectorName, List<Map<String, String>> configs, CallBack<List<TaskInfo>> callBack) {
+    callBack.onCompletion(
+        new UnsupportedOperationException(
+            "OMS Connect in standalone mode does not support externally setting task configurations"),
+        null);
+  }
 
   public boolean startConnector(String connectorName, Map<String, String> config) {
     configStorageService.putConnectorConfig(connectorName, config);
@@ -169,24 +178,90 @@ public class StandaloneProcessor extends AbstractProcessor {
     return true;
   }
 
-  public boolean startTask(ConnectorTaskId taskId) {
-    return false;
+  @Override
+  public void deleteConnectorConfig(String connector, CallBack<ConnectorInfo> callBack) {
+    if (!stateConfig.contains(connector)) {
+      callBack.onCompletion(
+          new ConnectException("Cannot delete a connector that does not exist ; " + connector),
+          null);
+      return;
+    }
+    ConnectorInfo connectorInfo = createConnectorInfo(connector);
+    removeConnectorTask(connector);
+    for (ConnectorTaskId taskId : stateConfig.tasks(connector)) {
+      taskStatusListener.onDeletion(taskId);
+    }
+    removeConnector(connector);
+    connectorStatusListener.onDeletion(connector);
+    callBack.onCompletion(null, connectorInfo);
+  }
+
+  private void removeConnector(String connector) {
+    worker.stopConnector(connector);
+    configStorageService.removeConnectorConfig(connector);
   }
 
   @Override
-  public void deleteConnectorConfig(String connector) {}
+  public void connectorConfig(String connector, CallBack<Map<String, String>> callBack) {
+    if (!stateConfig.contains(connector)) {
+      callBack.onCompletion(
+          new ConnectException("The connector does not exist ; " + connector),
+          null);
+      return;
+    }
+    Map<String, String> config = stateConfig.connectorConfig(connector);
+    callBack.onCompletion(null, config);
+  }
 
   @Override
-  public void connectorConfig(String connector, CallBack<Map<String, String>> callBack) {}
+  public void taskConfigs(String connector, CallBack<List<TaskInfo>> callBack) {
+    if (!stateConfig.contains(connector)) {
+      callBack.onCompletion(
+          new ConnectException("The connector does not exist ; " + connector),
+          null);
+      return;
+    }
+    List<TaskInfo> taskInfos = new ArrayList<>();
+    for (ConnectorTaskId taskId : stateConfig.tasks(connector)) {
+      taskInfos.add(new TaskInfo(taskId, stateConfig.taskConfig(taskId)));
+    }
+    callBack.onCompletion(null, taskInfos);
+  }
 
   @Override
-  public void taskConfigs(String connector, CallBack<List<TaskInfo>> callBack) {}
+  public void connectorStatus(String connector, CallBack<ConnectorStateInfo> callBack) {
+    if (!stateConfig.contains(connector)) {
+      callBack.onCompletion(
+          new ConnectException("The connector does not exist ; " + connector),
+          null);
+      return;
+    }
+    List<ConnectorStateInfo.TaskState> taskStates = new ArrayList<>();
+    for (ConnectorTaskId taskId : stateConfig.tasks(connector)) {
+      taskStates.add(
+          new ConnectorStateInfo.TaskState(
+              taskId, statusStorageService.get(taskId).getState().toString()));
+    }
+    ConnectorStateInfo connectorStateInfo =
+        new ConnectorStateInfo(
+            connector,
+            new ConnectorStateInfo.ConnectorState(
+                connector, statusStorageService.get(connector).getState().toString()),
+            taskStates,
+            getConnectorTypeFromClass(
+                stateConfig
+                    .connectorConfig(connector)
+                    .get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
+    callBack.onCompletion(null, connectorStateInfo);
+  }
 
   @Override
-  public void connectorStatus(String connector, CallBack<ConnectorStateInfo> callBack) {}
-
-  @Override
-  public void taskStatus(ConnectorTaskId taskId, CallBack<ConnectorStateInfo.TaskState> callBack) {}
+  public void taskStatus(ConnectorTaskId taskId, CallBack<ConnectorStateInfo.TaskState> callBack) {
+    ConnectorStateInfo.TaskState taskState =
+        new ConnectorStateInfo.TaskState(
+            taskId, statusStorageService.get(taskId).getState().toString());
+    callBack.onCompletion(null, taskState);
+  }
 
   @Override
   public void restartConnector(String connector) {}
@@ -195,10 +270,20 @@ public class StandaloneProcessor extends AbstractProcessor {
   public void restartTask(ConnectorTaskId taskId) {}
 
   @Override
-  public void pauseConnector(String connector) {}
+  public void pauseConnector(String connector) {
+    if (!stateConfig.contains(connector)) {
+      throw new ConnectException("The connector does not exist ; " + connector);
+    }
+    configStorageService.putTargetState(connector, TargetState.PAUSED);
+  }
 
   @Override
-  public void resumeConnector(String connector) {}
+  public void resumeConnector(String connector) {
+    if (!stateConfig.contains(connector)) {
+      throw new ConnectException("The connector does not exist ; " + connector);
+    }
+    configStorageService.putTargetState(connector, TargetState.STARTED);
+  }
 
   @Override
   public boolean validateConnectorConfig(Map<String, String> configs) {
@@ -243,42 +328,80 @@ public class StandaloneProcessor extends AbstractProcessor {
   public class ConnectorStatusListener implements StatusListener<String> {
 
     @Override
-    public void onStartUp(String connectorOrTaskId) {}
+    public void onStartUp(String connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new ConnectorStatus(connectorOrTaskId, AbstractStatus.State.RUNNING));
+    }
 
     @Override
-    public void onPause(String connectorOrTaskId) {}
+    public void onPause(String connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new ConnectorStatus(connectorOrTaskId, AbstractStatus.State.PAUSED));
+    }
 
     @Override
-    public void onResume(String connectorOrTaskId) {}
+    public void onResume(String connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new ConnectorStatus(connectorOrTaskId, AbstractStatus.State.RUNNING));
+    }
 
     @Override
-    public void onShutDown(String connectorOrTaskId) {}
+    public void onShutDown(String connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId,
+          new ConnectorStatus(connectorOrTaskId, AbstractStatus.State.UNASSIGNED));
+    }
 
     @Override
-    public void onDeletion(String connectorOrTaskId) {}
+    public void onDeletion(String connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId,
+          new ConnectorStatus(connectorOrTaskId, AbstractStatus.State.DESTROYED));
+    }
 
     @Override
-    public void onFailure(String connectorOrTaskId, Throwable throwable) {}
+    public void onFailure(String connectorOrTaskId, Throwable throwable) {
+      statusStorageService.put(
+          connectorOrTaskId, new ConnectorStatus(connectorOrTaskId, AbstractStatus.State.FAILED));
+    }
   }
 
   public class TaskStatusListener implements StatusListener<ConnectorTaskId> {
 
     @Override
-    public void onStartUp(ConnectorTaskId connectorOrTaskId) {}
+    public void onStartUp(ConnectorTaskId connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new TaskStatus(connectorOrTaskId, AbstractStatus.State.RUNNING));
+    }
 
     @Override
-    public void onPause(ConnectorTaskId connectorOrTaskId) {}
+    public void onPause(ConnectorTaskId connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new TaskStatus(connectorOrTaskId, AbstractStatus.State.PAUSED));
+    }
 
     @Override
-    public void onResume(ConnectorTaskId connectorOrTaskId) {}
+    public void onResume(ConnectorTaskId connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new TaskStatus(connectorOrTaskId, AbstractStatus.State.RUNNING));
+    }
 
     @Override
-    public void onShutDown(ConnectorTaskId connectorOrTaskId) {}
+    public void onShutDown(ConnectorTaskId connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new TaskStatus(connectorOrTaskId, AbstractStatus.State.UNASSIGNED));
+    }
 
     @Override
-    public void onDeletion(ConnectorTaskId connectorOrTaskId) {}
+    public void onDeletion(ConnectorTaskId connectorOrTaskId) {
+      statusStorageService.put(
+          connectorOrTaskId, new TaskStatus(connectorOrTaskId, AbstractStatus.State.DESTROYED));
+    }
 
     @Override
-    public void onFailure(ConnectorTaskId connectorOrTaskId, Throwable throwable) {}
+    public void onFailure(ConnectorTaskId connectorOrTaskId, Throwable throwable) {
+      statusStorageService.put(
+          connectorOrTaskId, new TaskStatus(connectorOrTaskId, AbstractStatus.State.FAILED));
+    }
   }
 }

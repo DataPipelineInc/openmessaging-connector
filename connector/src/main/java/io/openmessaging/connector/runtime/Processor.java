@@ -26,7 +26,7 @@ public interface Processor {
 
   void connectorInfo(String connectorName,CallBack<ConnectorInfo> callBack);
 
-  void deleteConnectorConfig(String connector);
+  void deleteConnectorConfig(String connector,CallBack<ConnectorInfo> callBack);
 
   void connectorConfig(String connector, CallBack<Map<String,String>> callBack);
 

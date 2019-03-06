@@ -42,6 +42,10 @@ public class ConnectorStateInfo {
       super(state);
       this.connectorName = connectorName;
     }
+
+    public String getConnectorName() {
+      return connectorName;
+    }
   }
 
   public static class TaskState extends AbstractState {
@@ -50,6 +54,10 @@ public class ConnectorStateInfo {
     public TaskState(ConnectorTaskId taskId, String state) {
       super(state);
       this.taskId = taskId;
+    }
+
+    public ConnectorTaskId getTaskId() {
+      return taskId;
     }
   }
 

@@ -18,6 +18,11 @@ public class ConnectorTaskId implements Comparable<ConnectorTaskId> {
   }
 
   @Override
+  public String toString() {
+    return connector + '-' + id;
+  }
+
+  @Override
   public int hashCode() {
     int result = connector != null ? connector.hashCode() : 0;
     result = 31 * result + id;

@@ -89,9 +89,10 @@ public class ConnectorsResource {
 
   @DELETE
   @Path("/{connector}")
-  public Response deleteConnector(final @PathParam("connector") String connector) {
-    processor.deleteConnectorConfig(connector);
-    return Response.accepted().build();
+  public ConnectorInfo deleteConnector(final @PathParam("connector") String connector) {
+    FutureCallBack<ConnectorInfo> cb = new FutureCallBack<>();
+    processor.deleteConnectorConfig(connector, cb);
+    return waitCallBackComplete(cb);
   }
 
   @GET

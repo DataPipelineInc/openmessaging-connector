@@ -64,6 +64,16 @@ public class Worker {
     return true;
   }
 
+  public boolean stopConnector(String connectorName) {
+    if (!connectors.containsKey(connectorName)) {
+      log.warn("Ignoring stop request for unowned connector {}", connectorName);
+      return false;
+    }
+    WorkerConnector workerConnector = connectors.get(connectorName);
+    workerConnector.stop();
+    return true;
+  }
+
   public boolean startTask(
       ConnectorTaskId taskId,
       Map<String, String> taskConfig,
@@ -121,7 +131,10 @@ public class Worker {
     }
   }
 
-  public void stopAndAwaitTask(ConnectorTaskId taskId) {}
+  public void stopAndAwaitTask(ConnectorTaskId taskId) {
+    stopTask(taskId);
+    awaitTask(taskId);
+  }
 
   public void stopTasks(Collection<ConnectorTaskId> taskIds) {
     for (ConnectorTaskId taskId : taskIds) {
@@ -131,6 +144,10 @@ public class Worker {
 
   public void stopTask(ConnectorTaskId taskId) {
     WorkerTask workerTask = tasks.get(taskId);
+    if (workerTask == null) {
+      log.warn("Ignoring stop request for unowned task {}", taskId);
+      return;
+    }
     workerTask.stop();
   }
 
@@ -140,7 +157,14 @@ public class Worker {
     }
   }
 
-  private void awaitTask(ConnectorTaskId taskId) {}
+  private void awaitTask(ConnectorTaskId taskId) {
+    WorkerTask workerTask = tasks.get(taskId);
+    if (workerTask == null) {
+      log.warn("Ignoring stop request for unowned task {}", taskId);
+      return;
+    }
+    workerTask.awaitStop();
+  }
 
   public Plugins plugins() {
     return plugins;
