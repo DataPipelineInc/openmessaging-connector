@@ -55,7 +55,7 @@ public class Worker {
       TargetState targetState,
       StandaloneProcessor.ConnectorStatusListener statusListener) {
     Connector connector =
-        Plugins.newConnector(connectorConfig.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG));
+        plugins().newConnector(connectorConfig.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG));
     WorkerConnector workerConnector =
         new WorkerConnector(connector, connectorName, connectorConfig, statusListener);
     workerConnector.initialize();

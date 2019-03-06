@@ -6,12 +6,12 @@ import io.openmessaging.connector.runtime.rest.error.ConnectException;
 
 public class Plugins {
 
-  public static Connector newConnector(String className) {
+  public Connector newConnector(String className) {
     Class<? extends Connector> clazz = pluginClass(className, Connector.class);
     return newPlugin(clazz);
   }
 
-  public static Task newTask(String className) {
+  public Task newTask(String className) {
     Class<? extends Task> clazz = pluginClass(className, Task.class);
     return newPlugin(clazz);
   }
