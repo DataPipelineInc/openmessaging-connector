@@ -142,7 +142,7 @@ public class Worker {
     }
   }
 
-  public void stopTask(ConnectorTaskId taskId) {
+  private void stopTask(ConnectorTaskId taskId) {
     WorkerTask workerTask = tasks.get(taskId);
     if (workerTask == null) {
       log.warn("Ignoring stop request for unowned task {}", taskId);

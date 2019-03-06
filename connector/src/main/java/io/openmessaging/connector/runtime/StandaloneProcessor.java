@@ -106,14 +106,12 @@ public class StandaloneProcessor extends AbstractProcessor {
 
   @Override
   public void connectorInfo(String connectorName, CallBack<ConnectorInfo> callBack) {
-    if (stateConfig.contains(connectorName)) {
-      callBack.onCompletion(null, createConnectorInfo(connectorName));
-      return;
-    } else {
+    if (!stateConfig.contains(connectorName)) {
       callBack.onCompletion(
           new ConnectException("The connector does not exist ; " + connectorName), null);
       return;
     }
+    callBack.onCompletion(null, createConnectorInfo(connectorName));
   }
 
   private Connector getConnector(String className) {
@@ -171,7 +169,7 @@ public class StandaloneProcessor extends AbstractProcessor {
         null);
   }
 
-  public boolean startConnector(String connectorName, Map<String, String> config) {
+  private boolean startConnector(String connectorName, Map<String, String> config) {
     configStorageService.putConnectorConfig(connectorName, config);
     TargetState targetState = stateConfig.targetState(connectorName);
     worker.startConnector(connectorName, config, targetState, this.connectorStatusListener);
@@ -205,20 +203,17 @@ public class StandaloneProcessor extends AbstractProcessor {
   public void connectorConfig(String connector, CallBack<Map<String, String>> callBack) {
     if (!stateConfig.contains(connector)) {
       callBack.onCompletion(
-          new ConnectException("The connector does not exist ; " + connector),
-          null);
+          new ConnectException("The connector does not exist ; " + connector), null);
       return;
     }
-    Map<String, String> config = stateConfig.connectorConfig(connector);
-    callBack.onCompletion(null, config);
+    callBack.onCompletion(null, stateConfig.connectorConfig(connector));
   }
 
   @Override
   public void taskConfigs(String connector, CallBack<List<TaskInfo>> callBack) {
     if (!stateConfig.contains(connector)) {
       callBack.onCompletion(
-          new ConnectException("The connector does not exist ; " + connector),
-          null);
+          new ConnectException("The connector does not exist ; " + connector), null);
       return;
     }
     List<TaskInfo> taskInfos = new ArrayList<>();
@@ -232,8 +227,7 @@ public class StandaloneProcessor extends AbstractProcessor {
   public void connectorStatus(String connector, CallBack<ConnectorStateInfo> callBack) {
     if (!stateConfig.contains(connector)) {
       callBack.onCompletion(
-          new ConnectException("The connector does not exist ; " + connector),
-          null);
+          new ConnectException("The connector does not exist ; " + connector), null);
       return;
     }
     List<ConnectorStateInfo.TaskState> taskStates = new ArrayList<>();
@@ -264,10 +258,41 @@ public class StandaloneProcessor extends AbstractProcessor {
   }
 
   @Override
-  public void restartConnector(String connector) {}
+  public void restartConnector(String connector, CallBack<Void> callBack) {
+    if (!stateConfig.contains(connector)) {
+      callBack.onCompletion(
+          new ConnectException("The connector does not exist ; " + connector), null);
+      return;
+    }
+    Map<String, String> connectorConfig = stateConfig.connectorConfig(connector);
+    TargetState targetState = stateConfig.targetState(connector);
+    worker.stopConnector(connector);
+    if (worker.startConnector(
+        connector, connectorConfig, targetState, this.connectorStatusListener)) {
+      callBack.onCompletion(null, null);
+    } else {
+      callBack.onCompletion(new ConnectException("Failed to start connector: " + connector), null);
+    }
+  }
 
   @Override
-  public void restartTask(ConnectorTaskId taskId) {}
+  public void restartTask(ConnectorTaskId taskId, CallBack<Void> callBack) {
+    if (!stateConfig.contains(taskId.getConnectorName())) {
+      callBack.onCompletion(
+          new ConnectException("The connector does not exist ; " + taskId.getConnectorName()),
+          null);
+      return;
+    }
+    Map<String, String> taskConfig = stateConfig.taskConfig(taskId);
+    TargetState targetState = stateConfig.targetState(taskId.getConnectorName());
+    worker.stopAndAwaitTask(taskId);
+    if (worker.startTask(taskId, taskConfig, targetState, this.taskStatusListener)) {
+      callBack.onCompletion(null, null);
+
+    } else {
+      callBack.onCompletion(new ConnectException("Failed to start tast: " + taskId), null);
+    }
+  }
 
   @Override
   public void pauseConnector(String connector) {

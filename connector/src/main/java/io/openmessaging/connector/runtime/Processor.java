@@ -36,9 +36,9 @@ public interface Processor {
 
   void taskStatus(ConnectorTaskId taskId, CallBack<ConnectorStateInfo.TaskState> callBack);
 
-  void restartConnector(String connector);
+  void restartConnector(String connector,CallBack<Void> callBack);
 
-  void restartTask(ConnectorTaskId taskId);
+  void restartTask(ConnectorTaskId taskId,CallBack<Void> callBack);
 
   void pauseConnector(String connector);
 

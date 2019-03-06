@@ -49,10 +49,15 @@ public class DistributedProcessor extends AbstractProcessor {
   public void taskStatus(ConnectorTaskId taskId, CallBack<ConnectorStateInfo.TaskState> callBack) {}
 
   @Override
-  public void restartConnector(String connector) {}
+  public void restartConnector(String connector, CallBack<Void> callBack) {
+
+  }
 
   @Override
-  public void restartTask(ConnectorTaskId taskId) {}
+  public void restartTask(ConnectorTaskId taskId, CallBack<Void> callBack) {
+
+  }
+
 
   @Override
   public void pauseConnector(String connector) {}
