@@ -14,6 +14,7 @@ import io.openmessaging.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
@@ -101,8 +102,8 @@ public class WorkerSourceTask extends WorkerTask {
       Message message =
           this.producer.createBytesMessage(
               dataEntry.getQueueName(), ConvertUtils.getBytesfromObject(dataEntry.getPayload()));
-      byte[] sourcePartition = dataEntry.getSourcePartition();
-      byte[] sourcePosition = dataEntry.getSourcePosition();
+      ByteBuffer sourcePartition = dataEntry.getSourcePartition();
+      ByteBuffer sourcePosition = dataEntry.getSourcePosition();
       synchronized (this) {
         if (flushing) {
           duringFlushMessage.put(dataEntry, dataEntry);

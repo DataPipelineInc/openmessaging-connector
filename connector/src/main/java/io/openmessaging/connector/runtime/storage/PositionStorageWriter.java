@@ -7,14 +7,15 @@ import io.openmessaging.connector.runtime.utils.CallBack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
 public class PositionStorageWriter {
   private static final Logger log = LoggerFactory.getLogger(PositionStorageWriter.class);
-  private Map<byte[], byte[]> data;
-  private Map<byte[], byte[]> toFlush;
+  private Map<ByteBuffer,ByteBuffer> data;
+  private Map<ByteBuffer,ByteBuffer> toFlush;
   private WorkerConfig workerConfig;
   private boolean isFlushing;
   private PositionStorageService positionStorageService;
@@ -26,7 +27,7 @@ public class PositionStorageWriter {
     this.positionStorageService = positionStorageService;
   }
 
-  public synchronized void position(byte[] partition, byte[] position) {
+  public synchronized void position(ByteBuffer partition, ByteBuffer position) {
     data.put(partition, position);
   }
 

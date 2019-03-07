@@ -7,6 +7,7 @@ import io.openmessaging.connector.runtime.utils.ConvertUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ import java.util.concurrent.Future;
 
 public class MemoryPositionStorage implements PositionStorageService {
   private static final Logger log = LoggerFactory.getLogger(MemoryPositionStorage.class);
-  private Map<byte[], byte[]> positions;
+  private Map<ByteBuffer, ByteBuffer> positions;
   private ExecutorService executorService;
   private WorkerConfig workerConfig;
 
@@ -37,7 +38,7 @@ public class MemoryPositionStorage implements PositionStorageService {
   }
 
   @Override
-  public Future set(Map<byte[], byte[]> values, CallBack<Void> callBack) {
+  public Future set(Map<ByteBuffer, ByteBuffer> values, CallBack<Void> callBack) {
     return executorService.submit(
         () -> {
           positions.putAll(values);
@@ -49,11 +50,11 @@ public class MemoryPositionStorage implements PositionStorageService {
   }
 
   @Override
-  public void get(Collection<byte[]> key, CallBack<Map<byte[], byte[]>> callBack) {
+  public void get(Collection<ByteBuffer> key, CallBack<Map<ByteBuffer, ByteBuffer>> callBack) {
     executorService.submit(
         () -> {
-          Map<byte[], byte[]> result = new HashMap<>();
-          for (Map.Entry<byte[], byte[]> entry : positions.entrySet()) {
+          Map<ByteBuffer, ByteBuffer> result = new HashMap<>();
+          for (Map.Entry<ByteBuffer,ByteBuffer> entry : positions.entrySet()) {
             if (key.contains(entry.getKey())) {
               result.put(entry.getKey(), entry.getValue());
             }
@@ -65,11 +66,11 @@ public class MemoryPositionStorage implements PositionStorageService {
   }
 
   public void save() {
-    for (Map.Entry<byte[], byte[]> entry : positions.entrySet()) {
+    for (Map.Entry<ByteBuffer, ByteBuffer> entry : positions.entrySet()) {
       log.info(
           "Partition : {} , Position : {} ",
-          new String(entry.getKey()),
-          new String(entry.getValue()));
+          new String(entry.getKey().array()),
+          new String(entry.getValue().array()));
     }
   }
 }

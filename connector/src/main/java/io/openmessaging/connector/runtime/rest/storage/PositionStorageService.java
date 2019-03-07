@@ -3,6 +3,7 @@ package io.openmessaging.connector.runtime.rest.storage;
 import io.openmessaging.connector.runtime.WorkerConfig;
 import io.openmessaging.connector.runtime.utils.CallBack;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Future;
@@ -33,7 +34,7 @@ public interface PositionStorageService {
    * @param values The key of the map represents partition and the value represents position.
    * @param callBack the callback after saving position
    */
-  Future set(Map<byte[], byte[]> values, CallBack<Void> callBack);
+  Future set(Map<ByteBuffer,ByteBuffer> values, CallBack<Void> callBack);
 
   /**
    * Get position from memory or persistence.
@@ -41,5 +42,5 @@ public interface PositionStorageService {
    * @param key binary form of partition.
    * @param callBack the callback after getting position
    */
-  void get(Collection<byte[]> key, CallBack<Map<byte[], byte[]>> callBack);
+  void get(Collection<ByteBuffer> key, CallBack<Map<ByteBuffer,ByteBuffer>> callBack);
 }

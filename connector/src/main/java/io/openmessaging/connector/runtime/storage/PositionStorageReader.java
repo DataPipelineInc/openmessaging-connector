@@ -1,16 +1,17 @@
 package io.openmessaging.connector.runtime.storage;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
 
 public class PositionStorageReader implements io.openmessaging.connector.api.PositionStorageReader {
   @Override
-  public byte[] getPosition(byte[] partition) {
-    return new byte[0];
+  public ByteBuffer getPosition(ByteBuffer partition) {
+    return ByteBuffer.wrap(new byte[0]);
   }
 
   @Override
-  public Map<byte[], byte[]> getPositions(Collection<byte[]> partitions) {
+  public Map<ByteBuffer,ByteBuffer> getPositions(Collection<ByteBuffer> partitions) {
     return null;
   }
 }

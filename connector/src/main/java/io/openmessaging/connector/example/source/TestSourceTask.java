@@ -11,6 +11,7 @@ import io.openmessaging.internal.DefaultKeyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +33,7 @@ public class TestSourceTask extends SourceTask {
           new DataEntryBuilder(schema)
               .queue("q1")
               .putFiled("id", i++)
-              .buildSourceDataEntry("partition01".getBytes(), ("position" + i).getBytes()));
+              .buildSourceDataEntry(ByteBuffer.wrap("partition01".getBytes()), ByteBuffer.wrap(("position" + i).getBytes())));
       index++;
     }
     try {

@@ -169,7 +169,7 @@ public class Worker {
   private void awaitTask(ConnectorTaskId taskId) {
     WorkerTask workerTask = tasks.get(taskId);
     if (workerTask == null) {
-      log.warn("Ignoring stop request for unowned task {}", taskId);
+      log.warn("Ignoring await request for unowned task {}", taskId);
       return;
     }
     workerTask.awaitStop();
