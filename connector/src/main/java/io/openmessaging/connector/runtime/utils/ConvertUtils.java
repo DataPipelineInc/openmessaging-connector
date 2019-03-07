@@ -6,6 +6,7 @@ import io.openmessaging.KeyValue;
 import io.openmessaging.OMS;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +33,14 @@ public class ConvertUtils {
     try {
       return objectMapper.writeValueAsBytes(o);
     } catch (JsonProcessingException e) {
+      throw new ConnectException(e);
+    }
+  }
+
+  public static <T> T getObjectFromBytes(byte[] bytes, Class<T> clazz) {
+    try {
+      return objectMapper.readValue(bytes, clazz);
+    } catch (IOException e) {
       throw new ConnectException(e);
     }
   }

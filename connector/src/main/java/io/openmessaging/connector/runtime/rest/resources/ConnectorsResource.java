@@ -83,7 +83,9 @@ public class ConnectorsResource {
   @POST
   @Path("/{connector}/restart")
   public Response restartConnector(final @PathParam("connector") String connector) {
-    processor.restartConnector(connector);
+    FutureCallBack<Void> callBack = new FutureCallBack<>();
+    processor.restartConnector(connector, callBack);
+    waitCallBackComplete(callBack);
     return Response.accepted().build();
   }
 
@@ -126,7 +128,9 @@ public class ConnectorsResource {
   public Response restartTask(
       @PathParam("connector") String connector, @PathParam("task") Integer task) {
     ConnectorTaskId taskId = new ConnectorTaskId(connector, task);
-    processor.restartTask(taskId);
+    FutureCallBack<Void> callBack = new FutureCallBack<>();
+    processor.restartTask(taskId, callBack);
+    waitCallBackComplete(callBack);
     return Response.accepted().build();
   }
 

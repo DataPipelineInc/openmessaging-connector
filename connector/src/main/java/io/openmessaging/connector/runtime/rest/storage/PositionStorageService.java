@@ -1,9 +1,11 @@
 package io.openmessaging.connector.runtime.rest.storage;
 
 import io.openmessaging.connector.runtime.WorkerConfig;
+import io.openmessaging.connector.runtime.utils.CallBack;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.Future;
 
 /**
  * PositionStorageService is an interface for bulk storage of key-value pairs.Users can save
@@ -28,15 +30,16 @@ public interface PositionStorageService {
   /**
    * Save position to memory or persistence.
    *
-   * @param values the map The key of the map represents partition and the value represents.
-   *     position.
+   * @param values The key of the map represents partition and the value represents position.
+   * @param callBack the callback after saving position
    */
-  void set(Map<byte[], byte[]> values);
+  Future set(Map<byte[], byte[]> values, CallBack<Void> callBack);
 
   /**
    * Get position from memory or persistence.
    *
    * @param key binary form of partition.
+   * @param callBack the callback after getting position
    */
-  Map<byte[], byte[]> get(Collection<byte[]> key);
+  void get(Collection<byte[]> key, CallBack<Map<byte[], byte[]>> callBack);
 }

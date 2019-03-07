@@ -12,8 +12,8 @@ import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.storage.PositionStorageService;
 import io.openmessaging.connector.runtime.storage.PositionStorageWriter;
+import io.openmessaging.connector.runtime.storage.SourcePositionCommitter;
 import io.openmessaging.connector.runtime.utils.ConvertUtils;
-import io.openmessaging.internal.MessagingAccessPointAdapter;
 import io.openmessaging.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +34,7 @@ public class Worker {
   private Map<String, WorkerConnector> connectors;
   private Map<ConnectorTaskId, WorkerTask> tasks;
   private PositionStorageService positionStorageService;
+  private SourcePositionCommitter committer;
   private Plugins plugins;
 
   public Worker(
@@ -47,6 +48,7 @@ public class Worker {
     this.messagingAccessPoint =
         OMS.getMessagingAccessPoint(
             workerConfig.getMessagingSystemConfig().getString("accessPoint"), OMS.newKeyValue());
+    this.committer = new SourcePositionCommitter(workerConfig);
   }
 
   public boolean startConnector(
@@ -83,6 +85,9 @@ public class Worker {
     workerTask.initialize();
     tasks.put(taskId, workerTask);
     this.executorService.submit(workerTask);
+    if (workerTask instanceof WorkerSourceTask) {
+      committer.schedule(taskId, (WorkerSourceTask) workerTask);
+    }
     return true;
   }
 
@@ -97,7 +102,8 @@ public class Worker {
       Producer producer = messagingAccessPoint.createProducer();
       PositionStorageReader positionStorageReader =
           new io.openmessaging.connector.runtime.storage.PositionStorageReader();
-      PositionStorageWriter positionStorageWriter = new PositionStorageWriter();
+      PositionStorageWriter positionStorageWriter =
+          new PositionStorageWriter(this.workerConfig, this.positionStorageService);
       return new WorkerSourceTask(
           taskId,
           (SourceTask) task,
@@ -147,6 +153,9 @@ public class Worker {
     if (workerTask == null) {
       log.warn("Ignoring stop request for unowned task {}", taskId);
       return;
+    }
+    if (workerTask instanceof WorkerSourceTask) {
+      committer.remove(taskId);
     }
     workerTask.stop();
   }
