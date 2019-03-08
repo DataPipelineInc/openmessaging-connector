@@ -12,45 +12,45 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TestSourceConnector extends SourceConnector {
-  private static final Logger log = LoggerFactory.getLogger(TestSourceConnector.class);
+    private static final Logger log = LoggerFactory.getLogger(TestSourceConnector.class);
 
-  @Override
-  public String verifyAndSetConfig(KeyValue config) {
-    return null;
-  }
+    @Override
+    public String verifyAndSetConfig(KeyValue config) {
+        return null;
+    }
 
-  @Override
-  public void start() {
-    log.info("This connector has started");
-  }
+    @Override
+    public void start() {
+        log.info("This connector has started");
+    }
 
-  @Override
-  public void stop() {
-    log.info("This connector has stoped");
-  }
+    @Override
+    public void stop() {
+        log.info("This connector has stoped");
+    }
 
-  @Override
-  public void pause() {
-    log.info("This connector has paused");
-  }
+    @Override
+    public void pause() {
+        log.info("This connector has paused");
+    }
 
-  @Override
-  public void resume() {
-    log.info("This connector has resumed");
-  }
+    @Override
+    public void resume() {
+        log.info("This connector has resumed");
+    }
 
-  @Override
-  public Class<? extends Task> taskClass() {
-    return TestSourceTask.class;
-  }
+    @Override
+    public Class<? extends Task> taskClass() {
+        return TestSourceTask.class;
+    }
 
-  @Override
-  public List<KeyValue> taskConfigs() {
-    List<KeyValue> lists = new ArrayList<>();
-    KeyValue keyValue = new DefaultKeyValue();
-    keyValue.put(TaskConfig.TASK_CLASS_CONFIG, TestSourceTask.class.getName());
-    lists.add(keyValue);
-    lists.add(keyValue);
-    return lists;
-  }
+    @Override
+    public List<KeyValue> taskConfigs() {
+        List<KeyValue> lists = new ArrayList<>();
+        KeyValue keyValue = new DefaultKeyValue();
+        keyValue.put(TaskConfig.TASK_CLASS_CONFIG, TestSourceTask.class.getName());
+        lists.add(keyValue);
+        lists.add(keyValue);
+        return lists;
+    }
 }

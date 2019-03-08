@@ -8,6 +8,7 @@ public interface PositionStorageReader {
 
     /**
      * Get the position for the specified partition.
+     *
      * @param partition
      * @return
      */
@@ -15,8 +16,9 @@ public interface PositionStorageReader {
 
     /**
      * Get a set of positions for the specified partitions.
+     *
      * @param partitions
      * @return
      */
-    Map<ByteBuffer,ByteBuffer> getPositions(Collection<ByteBuffer> partitions);
+    Map<ByteBuffer, ByteBuffer> getPositions(Collection<ByteBuffer> partitions);
 }

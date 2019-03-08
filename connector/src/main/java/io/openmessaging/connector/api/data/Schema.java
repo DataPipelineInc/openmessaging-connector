@@ -32,10 +32,10 @@ public class Schema {
         this.fields = fields;
     }
 
-    public Field getField(String fieldName){
+    public Field getField(String fieldName) {
 
-        for(Field field : fields){
-            if(field.getName().equals(fieldName)){
+        for (Field field : fields) {
+            if (field.getName().equals(fieldName)) {
                 return field;
             }
         }

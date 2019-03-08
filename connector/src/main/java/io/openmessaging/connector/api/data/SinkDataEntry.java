@@ -7,7 +7,7 @@ public class SinkDataEntry extends DataEntry {
                          EntryType entryType,
                          String queueName,
                          Schema schema,
-                         Object[] payload){
+                         Object[] payload) {
         super(timestamp, entryType, queueName, schema, payload);
         this.queueOffset = queueOffset;
     }

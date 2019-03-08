@@ -4,6 +4,7 @@ public interface Converter<T> {
 
     /**
      * Method to serialize the payload of DataEntry.
+     *
      * @param object
      * @return
      */
@@ -11,6 +12,7 @@ public interface Converter<T> {
 
     /**
      * Method to deserialize the payload of DataEntry.
+     *
      * @param bytes
      * @return
      */

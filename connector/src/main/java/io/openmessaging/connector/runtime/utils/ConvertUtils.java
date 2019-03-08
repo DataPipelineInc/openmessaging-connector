@@ -11,37 +11,37 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ConvertUtils {
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  public static Map<String, String> keyValueToMap(KeyValue keyValue) {
-    Map<String, String> map = new HashMap<>();
-    for (String key : keyValue.keySet()) {
-      map.put(key, keyValue.getString(key));
+    public static Map<String, String> keyValueToMap(KeyValue keyValue) {
+        Map<String, String> map = new HashMap<>();
+        for (String key : keyValue.keySet()) {
+            map.put(key, keyValue.getString(key));
+        }
+        return map;
     }
-    return map;
-  }
 
-  public static KeyValue mapToKeyValue(Map<String, String> map) {
-    KeyValue keyValue = OMS.newKeyValue();
-    for (Map.Entry<String, String> entry : map.entrySet()) {
-      keyValue.put(entry.getKey(), entry.getValue());
+    public static KeyValue mapToKeyValue(Map<String, String> map) {
+        KeyValue keyValue = OMS.newKeyValue();
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            keyValue.put(entry.getKey(), entry.getValue());
+        }
+        return keyValue;
     }
-    return keyValue;
-  }
 
-  public static byte[] getBytesfromObject(Object o) {
-    try {
-      return objectMapper.writeValueAsBytes(o);
-    } catch (JsonProcessingException e) {
-      throw new ConnectException(e);
+    public static byte[] getBytesfromObject(Object o) {
+        try {
+            return objectMapper.writeValueAsBytes(o);
+        } catch (JsonProcessingException e) {
+            throw new ConnectException(e);
+        }
     }
-  }
 
-  public static <T> T getObjectFromBytes(byte[] bytes, Class<T> clazz) {
-    try {
-      return objectMapper.readValue(bytes, clazz);
-    } catch (IOException e) {
-      throw new ConnectException(e);
+    public static <T> T getObjectFromBytes(byte[] bytes, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(bytes, clazz);
+        } catch (IOException e) {
+            throw new ConnectException(e);
+        }
     }
-  }
 }

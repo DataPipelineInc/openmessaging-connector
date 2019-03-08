@@ -13,68 +13,68 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 public class PositionStorageWriter {
-  private static final Logger log = LoggerFactory.getLogger(PositionStorageWriter.class);
-  private Map<ByteBuffer,ByteBuffer> data;
-  private Map<ByteBuffer,ByteBuffer> toFlush;
-  private WorkerConfig workerConfig;
-  private boolean isFlushing;
-  private PositionStorageService positionStorageService;
+    private static final Logger log = LoggerFactory.getLogger(PositionStorageWriter.class);
+    private Map<ByteBuffer, ByteBuffer> data;
+    private Map<ByteBuffer, ByteBuffer> toFlush;
+    private WorkerConfig workerConfig;
+    private boolean isFlushing;
+    private PositionStorageService positionStorageService;
 
-  public PositionStorageWriter(
-      WorkerConfig workerConfig, PositionStorageService positionStorageService) {
-    this.data = new HashMap<>();
-    this.workerConfig = workerConfig;
-    this.positionStorageService = positionStorageService;
-  }
-
-  public synchronized void position(ByteBuffer partition, ByteBuffer position) {
-    data.put(partition, position);
-  }
-
-  public synchronized boolean beforeFlush() {
-    if (toFlush != null) {
-      log.error(
-          "Invalid call to PositionStorageWriter flush() while already flushing, the "
-              + "framework should not allow this");
-      throw new ConnectException("PositionStorageWriter is already flushing");
+    public PositionStorageWriter(
+            WorkerConfig workerConfig, PositionStorageService positionStorageService) {
+        this.data = new HashMap<>();
+        this.workerConfig = workerConfig;
+        this.positionStorageService = positionStorageService;
     }
-    if (data.isEmpty()) {
-      return false;
+
+    public synchronized void position(ByteBuffer partition, ByteBuffer position) {
+        data.put(partition, position);
     }
-    toFlush = data;
-    data = new HashMap<>();
-    return true;
-  }
 
-  public synchronized Future doFlush(CallBack<Void> callBack) {
-    return positionStorageService.set(
-        toFlush,
-        (throwable, result) -> {
-          if (throwable != null) {
-            onFailed();
-          } else {
-            onSuccessful();
-          }
-          if (callBack != null) {
-            callBack.onCompletion(throwable, result);
-          }
-        });
-  }
-
-  private synchronized void cancelFlush() {
-    if (!toFlush.isEmpty()) {
-      toFlush.putAll(data);
-      data = toFlush;
-      toFlush = null;
+    public synchronized boolean beforeFlush() {
+        if (toFlush != null) {
+            log.error(
+                    "Invalid call to PositionStorageWriter flush() while already flushing, the "
+                            + "framework should not allow this");
+            throw new ConnectException("PositionStorageWriter is already flushing");
+        }
+        if (data.isEmpty()) {
+            return false;
+        }
+        toFlush = data;
+        data = new HashMap<>();
+        return true;
     }
-  }
 
-  private synchronized void onSuccessful() {
-    log.info("Successfully flushed {} messages", toFlush.size());
-    toFlush = null;
-  }
+    public synchronized Future doFlush(CallBack<Void> callBack) {
+        return positionStorageService.set(
+                toFlush,
+                (throwable, result) -> {
+                    if (throwable != null) {
+                        onFailed();
+                    } else {
+                        onSuccessful();
+                    }
+                    if (callBack != null) {
+                        callBack.onCompletion(throwable, result);
+                    }
+                });
+    }
 
-  public synchronized void onFailed() {
-    cancelFlush();
-  }
+    private synchronized void cancelFlush() {
+        if (!toFlush.isEmpty()) {
+            toFlush.putAll(data);
+            data = toFlush;
+            toFlush = null;
+        }
+    }
+
+    private synchronized void onSuccessful() {
+        log.info("Successfully flushed {} messages", toFlush.size());
+        toFlush = null;
+    }
+
+    public synchronized void onFailed() {
+        cancelFlush();
+    }
 }

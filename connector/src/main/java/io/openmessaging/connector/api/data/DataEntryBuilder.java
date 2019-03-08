@@ -32,39 +32,39 @@ public class DataEntryBuilder {
      */
     private Object[] payload;
 
-    public DataEntryBuilder(Schema schema){
+    public DataEntryBuilder(Schema schema) {
         this.schema = schema;
         this.payload = new Object[schema.getFields().size()];
     }
 
-    public DataEntryBuilder timestamp(Long timestamp){
+    public DataEntryBuilder timestamp(Long timestamp) {
         this.timestamp = timestamp;
         return this;
     }
 
-    public DataEntryBuilder entryType(EntryType entryType){
+    public DataEntryBuilder entryType(EntryType entryType) {
         this.entryType = entryType;
         return this;
     }
 
-    public DataEntryBuilder queue(String queueName){
+    public DataEntryBuilder queue(String queueName) {
         this.queueName = queueName;
         return this;
     }
 
-    public DataEntryBuilder putFiled(String fieldName, Object value){
+    public DataEntryBuilder putFiled(String fieldName, Object value) {
 
         Field field = lookupField(fieldName);
         payload[field.getIndex()] = value;
         return this;
     }
 
-    public SourceDataEntry buildSourceDataEntry(ByteBuffer sourcePartition, ByteBuffer sourcePosition){
+    public SourceDataEntry buildSourceDataEntry(ByteBuffer sourcePartition, ByteBuffer sourcePosition) {
 
         return new SourceDataEntry(sourcePartition, sourcePosition, timestamp, entryType, queueName, schema, payload);
     }
 
-    public SinkDataEntry buildSinkDataEntry(Long queueOffset){
+    public SinkDataEntry buildSinkDataEntry(Long queueOffset) {
 
         return new SinkDataEntry(queueOffset, timestamp, entryType, queueName, schema, payload);
     }

@@ -6,7 +6,7 @@ public abstract class DataEntry {
                      EntryType entryType,
                      String queueName,
                      Schema schema,
-                     Object[] payload){
+                     Object[] payload) {
         this.timestamp = timestamp;
         this.entryType = entryType;
         this.queueName = queueName;

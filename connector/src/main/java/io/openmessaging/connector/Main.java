@@ -16,26 +16,26 @@ import io.openmessaging.connector.runtime.storage.standalone.MemoryPositionStora
 import io.openmessaging.connector.runtime.storage.standalone.MemoryStatusStorage;
 
 public class Main {
-  public static void main(String[] args) {
-    KeyValue restConfig = OMS.newKeyValue();
-    restConfig.put(WorkerConfig.REST_HOSTNAME, "localhost");
-    restConfig.put(WorkerConfig.REST_PORT, 2222);
-    KeyValue messagingSystemConfig = OMS.newKeyValue();
-    messagingSystemConfig.put("accessPoint", "oms:rocketmq://wh:9876/default:default");
-    WorkerConfig workerConfig =
-        new WorkerConfig(
-            restConfig,
-            messagingSystemConfig,
-            OMS.newKeyValue(),
-            OMS.newKeyValue(),
-            OMS.newKeyValue());
-    ConfigStorageService configStorageService = new MemoryConfigStorage();
-    StatusStorageService statusStorageService = new MemoryStatusStorage();
-    PositionStorageService positionStorageService = new MemoryPositionStorage();
-    Worker worker = new Worker(workerConfig, positionStorageService, new Plugins());
-    Processor processor =
-        new StandaloneProcessor(configStorageService, statusStorageService, worker);
-    RestServer restServer = new RestServer(workerConfig);
-    restServer.startServer(processor);
-  }
+    public static void main(String[] args) {
+        KeyValue restConfig = OMS.newKeyValue();
+        restConfig.put(WorkerConfig.REST_HOSTNAME, "localhost");
+        restConfig.put(WorkerConfig.REST_PORT, 2222);
+        KeyValue messagingSystemConfig = OMS.newKeyValue();
+        messagingSystemConfig.put("accessPoint", "oms:rocketmq://wh:9876/default:default");
+        WorkerConfig workerConfig =
+                new WorkerConfig(
+                        restConfig,
+                        messagingSystemConfig,
+                        OMS.newKeyValue(),
+                        OMS.newKeyValue(),
+                        OMS.newKeyValue());
+        ConfigStorageService configStorageService = new MemoryConfigStorage();
+        StatusStorageService statusStorageService = new MemoryStatusStorage();
+        PositionStorageService positionStorageService = new MemoryPositionStorage();
+        Worker worker = new Worker(workerConfig, positionStorageService, new Plugins());
+        Processor processor =
+                new StandaloneProcessor(configStorageService, statusStorageService, worker);
+        RestServer restServer = new RestServer(workerConfig);
+        restServer.startServer(processor);
+    }
 }

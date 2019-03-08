@@ -6,6 +6,7 @@ public interface TaskContext {
 
     /**
      * Get the configurations of current task.
+     *
      * @return
      */
     KeyValue configs();
