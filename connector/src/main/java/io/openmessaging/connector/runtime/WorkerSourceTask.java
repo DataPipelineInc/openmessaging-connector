@@ -105,12 +105,14 @@ public class WorkerSourceTask extends WorkerTask {
       ByteBuffer sourcePartition = dataEntry.getSourcePartition();
       ByteBuffer sourcePosition = dataEntry.getSourcePosition();
       synchronized (this) {
-        if (flushing) {
-          duringFlushMessage.put(dataEntry, dataEntry);
-        } else {
-          beforeFlushMessage.put(dataEntry, dataEntry);
+        if (!lastFailed) {
+          if (flushing) {
+            duringFlushMessage.put(dataEntry, dataEntry);
+          } else {
+            beforeFlushMessage.put(dataEntry, dataEntry);
+          }
+          positionStorageWriter.position(sourcePartition, sourcePosition);
         }
-        positionStorageWriter.position(sourcePartition, sourcePosition);
       }
       try {
         this.producer.send(message);

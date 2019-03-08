@@ -23,7 +23,12 @@ public class Main {
     KeyValue messagingSystemConfig = OMS.newKeyValue();
     messagingSystemConfig.put("accessPoint", "oms:rocketmq://wh:9876/default:default");
     WorkerConfig workerConfig =
-        new WorkerConfig(restConfig, messagingSystemConfig, OMS.newKeyValue());
+        new WorkerConfig(
+            restConfig,
+            messagingSystemConfig,
+            OMS.newKeyValue(),
+            OMS.newKeyValue(),
+            OMS.newKeyValue());
     ConfigStorageService configStorageService = new MemoryConfigStorage();
     StatusStorageService statusStorageService = new MemoryStatusStorage();
     PositionStorageService positionStorageService = new MemoryPositionStorage();

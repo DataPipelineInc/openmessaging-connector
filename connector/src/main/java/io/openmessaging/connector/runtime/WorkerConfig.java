@@ -2,6 +2,8 @@ package io.openmessaging.connector.runtime;
 
 import io.openmessaging.KeyValue;
 
+import java.security.Key;
+
 /**
  * The configuration information class of OMS,this class contains all configuration information such
  * as RestServer, messaging system, etc.
@@ -13,11 +15,20 @@ public class WorkerConfig {
   private KeyValue restConfig;
   private KeyValue messagingSystemConfig;
   private KeyValue otherConfig;
+  private KeyValue taskConfig;
+  private KeyValue connectorConfig;
 
-  public WorkerConfig(KeyValue restConfig, KeyValue messagingSystemConfig, KeyValue otherConfig) {
+  public WorkerConfig(
+      KeyValue restConfig,
+      KeyValue messagingSystemConfig,
+      KeyValue otherConfig,
+      KeyValue taskConfig,
+      KeyValue connectorConfig) {
     this.restConfig = restConfig;
     this.messagingSystemConfig = messagingSystemConfig;
     this.otherConfig = otherConfig;
+    this.taskConfig = taskConfig;
+    this.connectorConfig = connectorConfig;
   }
 
   public KeyValue getRestConfig() {
@@ -30,5 +41,13 @@ public class WorkerConfig {
 
   public KeyValue getOtherConfig() {
     return otherConfig;
+  }
+
+  public KeyValue getTaskConfig() {
+    return taskConfig;
+  }
+
+  public KeyValue getConnectorConfig() {
+    return connectorConfig;
   }
 }

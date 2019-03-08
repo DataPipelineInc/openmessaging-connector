@@ -50,6 +50,7 @@ public class TestSourceConnector extends SourceConnector {
     KeyValue keyValue = new DefaultKeyValue();
     keyValue.put(TaskConfig.TASK_CLASS_CONFIG, TestSourceTask.class.getName());
     lists.add(keyValue);
+    lists.add(keyValue);
     return lists;
   }
 }
