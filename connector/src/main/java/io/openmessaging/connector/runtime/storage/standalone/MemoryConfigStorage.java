@@ -17,6 +17,16 @@ public class MemoryConfigStorage implements ConfigStorageService {
         this.connectors = new HashMap<>();
     }
 
+    private static Map<ConnectorTaskId, Map<String, String>> taskConfigListAsMap(
+            String connector, List<Map<String, String>> configs) {
+        int index = 0;
+        Map<ConnectorTaskId, Map<String, String>> result = new TreeMap<>();
+        for (Map<String, String> taskConfigMap : configs) {
+            result.put(new ConnectorTaskId(connector, index++), taskConfigMap);
+        }
+        return result;
+    }
+
     @Override
     public void start() {
     }
@@ -86,19 +96,21 @@ public class MemoryConfigStorage implements ConfigStorageService {
         Map<String, Map<String, String>> connectorConfigs = new HashMap<>();
         Map<String, TargetState> connectorTargetStates = new HashMap<>();
         Map<ConnectorTaskId, Map<String, String>> taskConfigs = new HashMap<>();
+        Map<String, Integer> connectorTaskCounts = new HashMap<>();
 
         for (Map.Entry<String, ConnectorState> connectorStateEntry : connectors.entrySet()) {
             String connector = connectorStateEntry.getKey();
             ConnectorState connectorState = connectorStateEntry.getValue();
             connectorConfigs.put(connector, connectorState.connConfig);
             connectorTargetStates.put(connector, connectorState.targetState);
+            connectorTaskCounts.put(connector, connectorState.taskConfigs.size());
             taskConfigs.putAll(connectorState.taskConfigs);
         }
         return new ClusterStateConfig(
                 connectorConfigs,
                 taskConfigs,
                 connectorTargetStates,
-                new HashSet<>(connectorConfigs.keySet()));
+                new HashSet<>(connectorConfigs.keySet()), connectorTaskCounts);
     }
 
     @Override
@@ -122,15 +134,5 @@ public class MemoryConfigStorage implements ConfigStorageService {
             this.connConfig = connConfig;
             this.taskConfigs = new HashMap<>();
         }
-    }
-
-    private static Map<ConnectorTaskId, Map<String, String>> taskConfigListAsMap(
-            String connector, List<Map<String, String>> configs) {
-        int index = 0;
-        Map<ConnectorTaskId, Map<String, String>> result = new TreeMap<>();
-        for (Map<String, String> taskConfigMap : configs) {
-            result.put(new ConnectorTaskId(connector, index++), taskConfigMap);
-        }
-        return result;
     }
 }
