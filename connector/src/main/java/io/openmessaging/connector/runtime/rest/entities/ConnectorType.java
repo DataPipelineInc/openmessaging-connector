@@ -4,6 +4,7 @@ import io.openmessaging.connector.api.Connector;
 import io.openmessaging.connector.api.sink.SinkConnector;
 import io.openmessaging.connector.api.source.SourceConnector;
 
+
 public enum ConnectorType {
     SOURCE,
     SINK,

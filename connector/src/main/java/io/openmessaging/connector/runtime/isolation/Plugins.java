@@ -12,11 +12,10 @@ import io.openmessaging.connector.runtime.rest.error.ConnectException;
 public class Plugins {
 
     /**
-     *
-     * @param className
-     * @param pluginClass
-     * @param <U>
-     * @return
+     * @param className   the name of the class to load.
+     * @param pluginClass The type of class that needs to be loaded.
+     * @param <U>         generics.
+     * @return the class to be obtained.
      */
     private static <U> Class<? extends U> pluginClass(String className, Class<U> pluginClass) {
         try {
@@ -30,6 +29,14 @@ public class Plugins {
         }
     }
 
+    /**
+     * Uses the constructor represented by this constructor object to
+     * create and initialize a new instance of the constructor's declaring class.
+     *
+     * @param clazz the class to be obtained.
+     * @param <U>   generics.
+     * @return the instance of the class.
+     */
     private static <U> U newPlugin(Class<? extends U> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
@@ -41,11 +48,23 @@ public class Plugins {
         }
     }
 
+    /**
+     * Create a connector by the name of the class.
+     *
+     * @param className the name of the class.
+     * @return a connector instance.
+     */
     public Connector newConnector(String className) {
         Class<? extends Connector> clazz = pluginClass(className, Connector.class);
         return newPlugin(clazz);
     }
 
+    /**
+     * Create a task by the name of the class.
+     *
+     * @param className the name of the class.
+     * @return a task instance.
+     */
     public Task newTask(String className) {
         Class<? extends Task> clazz = pluginClass(className, Task.class);
         return newPlugin(clazz);

@@ -1,5 +1,9 @@
 package io.openmessaging.connector.runtime.rest.entities;
 
+/**
+ * The unique ID of the task,it includes a unique connector ID and a task ID that is unique within
+ * the connector.
+ */
 public class ConnectorTaskId implements Comparable<ConnectorTaskId> {
     private String connector;
     private int id;

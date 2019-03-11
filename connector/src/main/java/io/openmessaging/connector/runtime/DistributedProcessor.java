@@ -77,8 +77,4 @@ public class DistributedProcessor extends AbstractProcessor {
     public void resumeConnector(String connector) {
     }
 
-    @Override
-    public boolean validateConnectorConfig(Map<String, String> configs) {
-        return false;
-    }
 }

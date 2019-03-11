@@ -6,14 +6,6 @@ import java.util.Map;
 
 public class WorkerConnector {
 
-    private enum State {
-        INIT, // initial state before startup
-        STOPPED, // the connector has been stopped/paused.
-        PAUSED,
-        STARTED, // the connector has been started/resumed.
-        FAILED, // the connector has failed (no further transitions are possible after this state)
-    }
-
     private Connector connector;
     private String connectorName;
     private State state;
@@ -32,9 +24,17 @@ public class WorkerConnector {
         this.statusListener = statusListener;
     }
 
+    /**
+     * Initialize this worker connector.
+     */
     public void initialize() {
     }
 
+    /**
+     * Change the target state of this worker connector.
+     *
+     * @param targetState the new target state of this worker connector.
+     */
     public void changeTargetState(TargetState targetState) {
         if (state == State.FAILED) {
             return;
@@ -52,23 +52,37 @@ public class WorkerConnector {
         }
     }
 
+    /**
+     * This method will be called if some operations fail.
+     *
+     * @param throwable throwable
+     */
     public void onFailure(Throwable throwable) {
         statusListener.onFailure(connectorName, throwable);
         this.state = State.FAILED;
     }
 
+    /**
+     * Start this worker connector.
+     */
     public void start() {
         if (doStart()) {
             statusListener.onStartUp(connectorName);
         }
     }
 
+    /**
+     * Resume this worker connector.
+     */
     public void resume() {
         if (doStart()) {
             statusListener.onResume(connectorName);
         }
     }
 
+    /**
+     * Start or resume this worker connector.
+     */
     private boolean doStart() {
         try {
             switch (state) {
@@ -92,6 +106,9 @@ public class WorkerConnector {
         }
     }
 
+    /**
+     * Pause this worker connector.
+     */
     private void pause() {
         try {
             switch (state) {
@@ -112,6 +129,9 @@ public class WorkerConnector {
         }
     }
 
+    /**
+     * Stop this worker connector
+     */
     public void stop() {
         try {
             if (state == State.STARTED || state == State.PAUSED) {
@@ -124,7 +144,20 @@ public class WorkerConnector {
         }
     }
 
+    /**
+     * Get this connector.
+     *
+     * @return this connector.
+     */
     public Connector getConnector() {
         return connector;
+    }
+
+    private enum State {
+        INIT, // initial state before startup
+        STOPPED, // the connector has been stopped/paused.
+        PAUSED,
+        STARTED, // the connector has been started/resumed.
+        FAILED, // the connector has failed (no further transitions are possible after this state)
     }
 }

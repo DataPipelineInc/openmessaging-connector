@@ -2,6 +2,10 @@ package io.openmessaging.connector.runtime.rest.entities;
 
 import java.util.List;
 
+/**
+ * Some state information used to feed back to the user's connector and task.
+ */
+
 public class ConnectorStateInfo {
     private String connectorName;
     private ConnectorState connectorState;

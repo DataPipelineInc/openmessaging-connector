@@ -317,7 +317,7 @@ public class Worker {
         if (workerConnectorOrTask instanceof WorkerConnector) {
             ((WorkerConnector) workerConnectorOrTask).changeTargetState(targetState);
         } else if (workerConnectorOrTask instanceof WorkerTask) {
-            ((WorkerTask) workerConnectorOrTask).changeTargerState(targetState);
+            ((WorkerTask) workerConnectorOrTask).changeTargetState(targetState);
         }
     }
 }

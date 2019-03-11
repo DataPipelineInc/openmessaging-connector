@@ -3,6 +3,10 @@ package io.openmessaging.connector.runtime.rest.entities;
 import java.util.List;
 import java.util.Map;
 
+
+/**
+ * Some configuration used to feed back to the user's connector and task.
+ */
 public class ConnectorInfo {
     private String connectorName;
     private Map<String, String> connectorConfig;

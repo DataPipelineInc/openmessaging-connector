@@ -1,5 +1,11 @@
 package io.openmessaging.connector.runtime.rest.listener;
 
+/**
+ * This listener can record this change
+ * after the connector or the state of the task is changed.
+ *
+ * @param <T> ConnectorTaskId or String.
+ */
 public interface StatusListener<T> {
 
     /**

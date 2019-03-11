@@ -12,6 +12,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+
+/**
+ * This writer holds key-value data.The framework will asynchronously flush these data
+ */
 public class PositionStorageWriter {
     private static final Logger log = LoggerFactory.getLogger(PositionStorageWriter.class);
     private Map<ByteBuffer, ByteBuffer> data;
@@ -27,10 +31,22 @@ public class PositionStorageWriter {
         this.positionStorageService = positionStorageService;
     }
 
+    /**
+     * Set a position for a partition using message values.
+     *
+     * @param partition the partition to store an position for.
+     * @param position  the position.
+     */
     public synchronized void position(ByteBuffer partition, ByteBuffer position) {
         data.put(partition, position);
     }
 
+
+    /**
+     * The first step of flush operation, this will take a snapshot of the current state.
+     *
+     * @return true if successfully init, false otherwise.
+     */
     public synchronized boolean beforeFlush() {
         if (toFlush != null) {
             log.error(
@@ -46,6 +62,14 @@ public class PositionStorageWriter {
         return true;
     }
 
+
+    /**
+     * Flush all the data in the current snapshot and clear them after success.
+     * This operation is an asynchronous operation, leaving all the data to the positionStorageService for storage.
+     *
+     * @param callBack the callBack
+     * @return a future.
+     */
     public synchronized Future doFlush(CallBack<Void> callBack) {
         return positionStorageService.set(
                 toFlush,
@@ -61,6 +85,10 @@ public class PositionStorageWriter {
                 });
     }
 
+    /**
+     * Cancel this flush, if there is an error in the flush process,
+     * this method will be called to handle the flush failure.
+     */
     private synchronized void cancelFlush() {
         if (!toFlush.isEmpty()) {
             toFlush.putAll(data);
@@ -69,11 +97,17 @@ public class PositionStorageWriter {
         }
     }
 
+    /**
+     * This method will be called if flush is successful.
+     */
     private synchronized void onSuccessful() {
         log.info("Successfully flushed {} messages", toFlush.size());
         toFlush = null;
     }
 
+    /**
+     * This method will be called if flush is failed.
+     */
     public synchronized void onFailed() {
         cancelFlush();
     }

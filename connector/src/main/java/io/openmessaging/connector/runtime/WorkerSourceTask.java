@@ -7,6 +7,7 @@ import io.openmessaging.connector.api.PositionStorageReader;
 import io.openmessaging.connector.api.data.SourceDataEntry;
 import io.openmessaging.connector.api.source.SourceTask;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
+import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.storage.PositionStorageWriter;
 import io.openmessaging.connector.runtime.utils.ConvertUtils;
 import io.openmessaging.producer.Producer;
@@ -19,6 +20,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
+/**
+ * WorkerTask on the source side，this worker is responsible for writing data to the messaging system.
+ */
 public class WorkerSourceTask extends WorkerTask {
     private static final Logger log = LoggerFactory.getLogger(WorkerSourceTask.class);
     private Producer producer;
@@ -55,6 +59,7 @@ public class WorkerSourceTask extends WorkerTask {
         this.lastFailed = false;
     }
 
+
     public void initialize() {
         super.initialize();
         this.producer.startup();
@@ -90,6 +95,11 @@ public class WorkerSourceTask extends WorkerTask {
         }
     }
 
+    /**
+     * This method will send a batch of message to the messaging system, and if it fails, it can be resent.
+     *
+     * @return true if all message has been send successfully ,false otherwise.
+     */
     private boolean sendMessages() {
         int processed = 0;
         List<String> thisBatch = new ArrayList<>();
@@ -99,6 +109,7 @@ public class WorkerSourceTask extends WorkerTask {
                             dataEntry.getQueueName(), ConvertUtils.getBytesfromObject(dataEntry.getPayload()));
             ByteBuffer sourcePartition = dataEntry.getSourcePartition();
             ByteBuffer sourcePosition = dataEntry.getSourcePosition();
+            //If we fail to send, we will not re-add the failed message to the map, but send it directly again.
             synchronized (this) {
                 if (!lastFailed) {
                     if (flushing) {
@@ -110,6 +121,7 @@ public class WorkerSourceTask extends WorkerTask {
                 }
             }
             try {
+                //TODO Asynchronously send a message, according to callBack to determine whether the message is sent successfully.
                 this.producer.send(message);
                 commitMessage(dataEntry);
                 processed++;
@@ -121,6 +133,9 @@ public class WorkerSourceTask extends WorkerTask {
                                 .collect(Collectors.joining("_")));
             } catch (Throwable throwable) {
                 log.warn("{} Failed to send {}", this, message, throwable);
+                if (lastFailed = true) {
+                    throw new ConnectException("Resend failed", throwable);
+                }
                 lastFailed = true;
                 toSend = toSend.subList(processed, toSend.size());
                 return false;
@@ -132,6 +147,11 @@ public class WorkerSourceTask extends WorkerTask {
         return true;
     }
 
+    /**
+     * If the message is sent successfully, we will remove the message from the map.
+     *
+     * @param sourceDataEntry the source data.
+     */
     private synchronized void commitMessage(SourceDataEntry sourceDataEntry) {
         SourceDataEntry dataEntry = beforeFlushMessage.remove(sourceDataEntry);
         if (dataEntry == null) {
@@ -143,10 +163,14 @@ public class WorkerSourceTask extends WorkerTask {
                     this,
                     dataEntry);
         } else if (flushing && beforeFlushMessage.isEmpty()) {
+            //Flush's thread will wait, only the messages in this map will be successfully sent.
             this.notifyAll();
         }
     }
 
+    /**
+     * Flush
+     */
     public void commitPosition() {
         log.info("Start flush");
         synchronized (this) {
@@ -192,12 +216,18 @@ public class WorkerSourceTask extends WorkerTask {
         }
     }
 
+    /**
+     * Flush successfully.
+     */
     private void onSuccessfulFlush() {
         beforeFlushMessage.putAll(duringFlushMessage);
         duringFlushMessage.clear();
         flushing = false;
     }
 
+    /**
+     * Flush Failed.
+     */
     private void onFailedFlush() {
         positionStorageWriter.onFailed();
         beforeFlushMessage.putAll(duringFlushMessage);

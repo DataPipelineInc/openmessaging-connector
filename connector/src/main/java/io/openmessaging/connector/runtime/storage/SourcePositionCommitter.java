@@ -10,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.concurrent.*;
 
+/**
+ * Responsible for scheduling the submission of all the source task positions managed by the worker.
+ */
 public class SourcePositionCommitter {
     private static final Logger log = LoggerFactory.getLogger(SourcePositionCommitter.class);
     private ScheduledExecutorService executorService;
@@ -22,6 +25,12 @@ public class SourcePositionCommitter {
         this.workerConfig = workerConfig;
     }
 
+    /**
+     * Start scheduling the submission of a source task's position.
+     *
+     * @param taskId           the id of the task.
+     * @param workerSourceTask the workerSourceTask to submit.
+     */
     public void schedule(ConnectorTaskId taskId, WorkerSourceTask workerSourceTask) {
         ScheduledFuture future =
                 this.executorService.scheduleWithFixedDelay(
@@ -29,6 +38,12 @@ public class SourcePositionCommitter {
         committers.put(taskId, future);
     }
 
+
+    /**
+     * Stop scheduling the submission of a source task's position.
+     *
+     * @param taskId the id of the task.
+     */
     public void remove(ConnectorTaskId taskId) {
         ScheduledFuture future = committers.remove(taskId);
         if (future == null) {
@@ -49,6 +64,11 @@ public class SourcePositionCommitter {
         }
     }
 
+    /**
+     * Stop all tasks.
+     *
+     * @param timeout
+     */
     public void shutdowm(long timeout) {
         this.executorService.shutdown();
         try {

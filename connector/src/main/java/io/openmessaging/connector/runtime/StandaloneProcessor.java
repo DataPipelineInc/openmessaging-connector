@@ -58,13 +58,6 @@ public class StandaloneProcessor extends AbstractProcessor {
     @Override
     public void putConnectorConfig(
             String connectorName, Map<String, String> config, CallBack<ConnectorInfo> callBack) {
-        if (!validateConnectorConfig(config)) {
-            callBack.onCompletion(
-                    new ConnectException(
-                            "The configuration of this connector did not pass the verification : " + config),
-                    null);
-            return;
-        }
         if (stateConfig.contains(connectorName)) {
             callBack.onCompletion(
                     new ConnectException("Connector " + connectorName + " already exists"), null);
@@ -297,11 +290,6 @@ public class StandaloneProcessor extends AbstractProcessor {
             throw new ConnectException("The connector does not exist ; " + connector);
         }
         configStorageService.putTargetState(connector, TargetState.STARTED);
-    }
-
-    @Override
-    public boolean validateConnectorConfig(Map<String, String> configs) {
-        return true;
     }
 
     private class ConfigChangeListener implements ConfigListener {

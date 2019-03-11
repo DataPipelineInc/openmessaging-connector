@@ -20,6 +20,9 @@ public abstract class WorkerTask implements Runnable {
         this.listener = listener;
     }
 
+    /**
+     * Initialize this worker task.
+     */
     public void initialize() {
     }
 
@@ -56,6 +59,7 @@ public abstract class WorkerTask implements Runnable {
     private void doClose() {
     }
 
+
     private void triggerStop() {
         synchronized (this) {
             this.stopping = true;
@@ -63,7 +67,12 @@ public abstract class WorkerTask implements Runnable {
         }
     }
 
-    public void changeTargerState(TargetState targetState) {
+    /**
+     * Change the target state of this worker task.
+     *
+     * @param targetState the new target state of this worker task.
+     */
+    public void changeTargetState(TargetState targetState) {
         synchronized (this) {
             if (isStopping()) {
                 return;
@@ -73,6 +82,11 @@ public abstract class WorkerTask implements Runnable {
         }
     }
 
+    /**
+     * Wait for this task to finish stopping.
+     *
+     * @return true if this task has finished stopping, false otherwise.
+     */
     public boolean awaitStop() {
         try {
             this.shutDownLatch.await();
@@ -84,10 +98,22 @@ public abstract class WorkerTask implements Runnable {
 
     public abstract void execute();
 
+    /**
+     * Check if this task should be paused.
+     *
+     * @return true if is task should be paused , false otherwise.
+     */
     public boolean shouldPause() {
         return targetState == TargetState.PAUSED;
     }
 
+
+    /**
+     * Await task resumption.
+     *
+     * @return true if the task has been resumed.
+     * @throws InterruptedException exception.
+     */
     public boolean awaitUnPause() throws InterruptedException {
         synchronized (this) {
             while (shouldPause()) {
@@ -100,20 +126,32 @@ public abstract class WorkerTask implements Runnable {
         }
     }
 
+    /**
+     * Check if this task is stopping.
+     *
+     * @return true if is task is stopping, false otherwise.
+     */
     public boolean isStopping() {
         return stopping;
     }
 
+    /**
+     * Stop this task, this doesn't really stop, just mark stopping as true.
+     */
     public void stop() {
         this.triggerStop();
     }
 
+
+    /**
+     * When this worker task is closed, we need to release some resources.
+     */
     public void releaseResource() {
     }
 
     public void onShutdown() {
         synchronized (this) {
-            this.triggerStop();
+            this.stop();
             listener.onShutDown(taskId);
         }
     }

@@ -1,14 +1,11 @@
 package io.openmessaging.connector.runtime.rest.entities;
 
+/**
+ * Some states common to the connector and task.
+ *
+ * @param <T> ConnectorTaskId or String.
+ */
 public abstract class AbstractStatus<T> {
-    public enum State {
-        UNASSIGNED,
-        RUNNING,
-        PAUSED,
-        FAILED,
-        DESTROYED
-    }
-
     private T id;
     private State state;
 
@@ -23,5 +20,13 @@ public abstract class AbstractStatus<T> {
 
     public State getState() {
         return state;
+    }
+
+    public enum State {
+        UNASSIGNED,
+        RUNNING,
+        PAUSED,
+        FAILED,
+        DESTROYED
     }
 }
