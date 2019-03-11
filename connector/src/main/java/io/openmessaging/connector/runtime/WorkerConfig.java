@@ -25,6 +25,9 @@ public class WorkerConfig {
         allConfig.add(REST_HOSTNAME);
         allConfig.add(REST_PORT);
         allConfig.add(OMS_ACCESSPOINT);
+        allConfig.add(POSITION_COMMIT_INTERVAL_MS_CONFIG);
+        allConfig.add(POSITION_COMMIT_TIMEOUT_MS_CONFIG);
+        allConfig.add(TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS_CONFIG);
     }
 
     private KeyValue workerConfig = OMS.newKeyValue();

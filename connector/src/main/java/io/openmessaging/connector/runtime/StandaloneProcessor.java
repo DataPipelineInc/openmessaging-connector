@@ -14,7 +14,7 @@ import io.openmessaging.connector.runtime.utils.CallBack;
 import java.util.*;
 
 public class StandaloneProcessor extends AbstractProcessor {
-    private Map<String, Connector> tempConnector;
+    private Map<String, ConnectorType> tempConnector;
     private ConfigStorageService configStorageService;
     private StatusStorageService statusStorageService;
     private ConfigListener configListener;
@@ -84,8 +84,14 @@ public class StandaloneProcessor extends AbstractProcessor {
     }
 
     private ConnectorType getConnectorTypeFromClass(String className) {
-        Connector connector = getConnector(className);
-        return ConnectorType.fromClass(connector.getClass());
+        if (tempConnector.containsKey(className)) {
+            return tempConnector.get(className);
+        } else {
+            Connector connector = plugins().newConnector(className);
+            ConnectorType type = ConnectorType.fromClass(connector.getClass());
+            tempConnector.put(className, type);
+            return type;
+        }
     }
 
     @Override
@@ -96,15 +102,6 @@ public class StandaloneProcessor extends AbstractProcessor {
             return;
         }
         callBack.onCompletion(null, createConnectorInfo(connectorName));
-    }
-
-    private Connector getConnector(String className) {
-        if (!tempConnector.containsKey(className)) {
-            Connector connector = plugins().newConnector(className);
-            tempConnector.put(className, connector);
-            return connector;
-        }
-        return tempConnector.get(className);
     }
 
     private void createOrUpdateTaskConfig(String connector) {
@@ -118,7 +115,7 @@ public class StandaloneProcessor extends AbstractProcessor {
     }
 
     private List<Map<String, String>> newTaskConfig(String connector) {
-        return worker.connectorTaskConfigs(connector);
+        return worker.connectorTaskConfigs(connector, stateConfig.connectorConfig(connector));
     }
 
     private List<Map<String, String>> oldTaskConfig(String connector) {

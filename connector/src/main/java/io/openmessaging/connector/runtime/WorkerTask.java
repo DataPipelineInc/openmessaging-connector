@@ -91,8 +91,7 @@ public abstract class WorkerTask implements Runnable {
      */
     public boolean awaitStop(long timeout) {
         try {
-            this.shutDownLatch.await(timeout, TimeUnit.MILLISECONDS);
-            return true;
+            return this.shutDownLatch.await(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             return false;
         }

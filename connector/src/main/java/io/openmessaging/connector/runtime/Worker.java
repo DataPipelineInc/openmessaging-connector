@@ -194,14 +194,15 @@ public class Worker {
      * @param connectorName the name of the connector.
      * @return a list of configuration information of the task.
      */
-    public List<Map<String, String>> connectorTaskConfigs(String connectorName) {
+    public List<Map<String, String>> connectorTaskConfigs(String connectorName, Map<String, String> connectorConfig) {
         WorkerConnector workerConnector = connectors.get(connectorName);
+        int maxTasks = Integer.parseInt(connectorConfig.get(ConnectorConfig.TASKS_MAX_CONFIG));
         if (workerConnector == null) {
             throw new ConnectException("Connector " + connectorName + " not found in this worker.");
         }
         Connector connector = workerConnector.getConnector();
         List<Map<String, String>> configs = new ArrayList<>();
-        for (KeyValue config : connector.taskConfigs()) {
+        for (KeyValue config : connector.taskConfigs(maxTasks)) {
             configs.add(ConvertUtils.keyValueToMap(config));
         }
         return configs;
@@ -242,8 +243,9 @@ public class Worker {
 
     /**
      * Wait for the task to be terminated.
+     *
      * @param timeout the longest time to wait.
-     * @param taskId the taskId that we want to stop.
+     * @param taskId  the taskId that we want to stop.
      */
     private void awaitTask(ConnectorTaskId taskId, long timeout) {
 
@@ -252,7 +254,9 @@ public class Worker {
             log.warn("Ignoring await request for unowned task {}", taskId);
             return;
         }
-        workerTask.awaitStop(timeout);
+        if (!workerTask.awaitStop(timeout)) {
+            log.error("Graceful stop of task {} failed.", taskId);
+        }
     }
 
     /**

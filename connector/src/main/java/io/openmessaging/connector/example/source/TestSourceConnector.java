@@ -45,12 +45,13 @@ public class TestSourceConnector extends SourceConnector {
     }
 
     @Override
-    public List<KeyValue> taskConfigs() {
+    public List<KeyValue> taskConfigs(int maxTasks) {
         List<KeyValue> lists = new ArrayList<>();
-        KeyValue keyValue = new DefaultKeyValue();
-        keyValue.put(TaskConfig.TASK_CLASS_CONFIG, TestSourceTask.class.getName());
-        lists.add(keyValue);
-        lists.add(keyValue);
+        for (int i = 0; i < maxTasks; i++) {
+            KeyValue keyValue = new DefaultKeyValue();
+            keyValue.put(TaskConfig.TASK_CLASS_CONFIG, TestSourceTask.class.getName());
+            lists.add(keyValue);
+        }
         return lists;
     }
 }

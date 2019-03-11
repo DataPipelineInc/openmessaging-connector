@@ -36,14 +36,14 @@ public interface Connector {
     /**
      * Returns the Task implementation for this Connector.
      *
-     * @return
+     * @return the task implementation.
      */
     Class<? extends Task> taskClass();
 
     /**
-     * Returns a set of configurations for Tasks based on the current configuration.
+     * Returns a list of configurations for Tasks based on the current configuration.
      *
-     * @return
+     * @return a list of configutation.
      */
-    List<KeyValue> taskConfigs();
+    List<KeyValue> taskConfigs(int maxTasks);
 }
