@@ -40,12 +40,14 @@ public class StandaloneProcessor extends AbstractProcessor {
 
     @Override
     public void start() {
+        this.worker.start();
         this.configStorageService.start();
         this.statusStorageService.start();
     }
 
     @Override
     public void stop() {
+        this.worker.stop();
         this.configStorageService.stop();
         this.statusStorageService.stop();
     }
@@ -267,7 +269,7 @@ public class StandaloneProcessor extends AbstractProcessor {
         }
         Map<String, String> taskConfig = stateConfig.taskConfig(taskId);
         TargetState targetState = stateConfig.targetState(taskId.getConnectorName());
-        worker.stopAndAwaitTask(taskId);
+        worker.stopAndAwaitTasks(Collections.singletonList(taskId));
         if (worker.startTask(taskId, taskConfig, targetState, this.taskStatusListener)) {
             callBack.onCompletion(null, null);
 

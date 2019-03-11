@@ -10,11 +10,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Path("/connector")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ConnectorsResource {
+    private static final long REQUEST_TIMEOUT_MS = 90 * 1000;
     private Processor processor;
 
     public ConnectorsResource(Processor processor) {
@@ -124,8 +127,8 @@ public class ConnectorsResource {
 
     private <T> T waitCallBackComplete(FutureCallBack<T> callBack) {
         try {
-            return callBack.get();
-        } catch (InterruptedException e) {
+            return callBack.get(REQUEST_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException | InterruptedException e) {
             throw new ConnectException(e);
         }
     }

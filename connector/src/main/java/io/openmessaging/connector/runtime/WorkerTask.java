@@ -3,6 +3,7 @@ package io.openmessaging.connector.runtime;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public abstract class WorkerTask implements Runnable {
     private ConnectorTaskId taskId;
@@ -85,11 +86,12 @@ public abstract class WorkerTask implements Runnable {
     /**
      * Wait for this task to finish stopping.
      *
+     * @param timeout the longest time to wait.
      * @return true if this task has finished stopping, false otherwise.
      */
-    public boolean awaitStop() {
+    public boolean awaitStop(long timeout) {
         try {
-            this.shutDownLatch.await();
+            this.shutDownLatch.await(timeout, TimeUnit.MILLISECONDS);
             return true;
         } catch (InterruptedException e) {
             return false;

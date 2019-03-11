@@ -173,6 +173,7 @@ public class WorkerSourceTask extends WorkerTask {
      */
     public void commitPosition() {
         log.info("Start flush");
+        long commitTimeLimit = this.workerConfig.getWorkerConfig().getLong(WorkerConfig.POSITION_COMMIT_TIMEOUT_MS_CONFIG);
         synchronized (this) {
             this.flushing = true;
             boolean prepare = this.positionStorageWriter.beforeFlush();
@@ -181,7 +182,7 @@ public class WorkerSourceTask extends WorkerTask {
 
             if (!beforeFlushMessage.isEmpty()) {
                 try {
-                    this.wait();
+                    this.wait(commitTimeLimit);
                 } catch (InterruptedException exception) {
                     log.error(
                             "{} Interrupted while flushing messages, positions will not be committed", this);

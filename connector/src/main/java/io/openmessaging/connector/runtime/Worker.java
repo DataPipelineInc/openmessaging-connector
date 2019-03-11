@@ -51,7 +51,7 @@ public class Worker {
         this.plugins = plugins;
         this.messagingAccessPoint =
                 OMS.getMessagingAccessPoint(
-                        workerConfig.getMessagingSystemConfig().getString("accessPoint"), OMS.newKeyValue());
+                        workerConfig.getWorkerConfig().getString(WorkerConfig.OMS_ACCESSPOINT), OMS.newKeyValue());
     }
 
     /**
@@ -70,15 +70,18 @@ public class Worker {
      */
     public void stop() {
         log.info("Stopping worker");
+        long startTime = System.currentTimeMillis();
+        long timeout = this.workerConfig.getWorkerConfig().getLong(WorkerConfig.TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS_CONFIG);
         if (!connectors.isEmpty()) {
             for (String connector : connectors.keySet()) {
                 stopConnector(connector);
             }
         }
+
         if (!tasks.isEmpty()) {
             stopAndAwaitTasks(tasks.keySet());
         }
-        this.committer.shutdowm(6000);
+        this.committer.shutdown(timeout - (System.currentTimeMillis() - startTime));
         this.positionStorageService.stop();
         log.info("Stopped worker");
     }
@@ -211,31 +214,14 @@ public class Worker {
      */
     public void stopAndAwaitTasks(Collection<ConnectorTaskId> taskIds) {
         for (ConnectorTaskId taskId : taskIds) {
-            stopAndAwaitTask(taskId);
-        }
-    }
-
-    /**
-     * Stop the given task asynchronously, then wait for the task to be terminated.
-     *
-     * @param taskId the taskId that we want to stop.
-     */
-    public void stopAndAwaitTask(ConnectorTaskId taskId) {
-        stopTask(taskId);
-        awaitTask(taskId);
-    }
-
-    /**
-     * Stop giving the tasks.
-     *
-     * @param taskIds the collection of the taskId that we want to stop.
-     */
-    public void stopTasks(Collection<ConnectorTaskId> taskIds) {
-        for (ConnectorTaskId taskId : taskIds) {
             stopTask(taskId);
         }
+        long start = System.currentTimeMillis();
+        long limit = this.workerConfig.getWorkerConfig().getLong(WorkerConfig.TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS_CONFIG);
+        for (ConnectorTaskId taskId : taskIds) {
+            awaitTask(taskId, limit - (System.currentTimeMillis() - start));
+        }
     }
-
 
     /**
      * Stop giving the task.
@@ -254,30 +240,19 @@ public class Worker {
         workerTask.stop();
     }
 
-
-    /**
-     * Wait for these tasks to be terminated.
-     *
-     * @param taskIds the collection of the taskId that we want to stop.
-     */
-    private void awaitTasks(Collection<ConnectorTaskId> taskIds) {
-        for (ConnectorTaskId taskId : taskIds) {
-            awaitTask(taskId);
-        }
-    }
-
     /**
      * Wait for the task to be terminated.
-     *
+     * @param timeout the longest time to wait.
      * @param taskId the taskId that we want to stop.
      */
-    private void awaitTask(ConnectorTaskId taskId) {
+    private void awaitTask(ConnectorTaskId taskId, long timeout) {
+
         WorkerTask workerTask = tasks.get(taskId);
         if (workerTask == null) {
             log.warn("Ignoring await request for unowned task {}", taskId);
             return;
         }
-        workerTask.awaitStop();
+        workerTask.awaitStop(timeout);
     }
 
     /**

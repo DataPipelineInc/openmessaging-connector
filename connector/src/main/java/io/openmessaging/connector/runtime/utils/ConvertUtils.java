@@ -9,6 +9,7 @@ import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class ConvertUtils {
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -43,5 +44,14 @@ public class ConvertUtils {
         } catch (IOException e) {
             throw new ConnectException(e);
         }
+    }
+
+
+    public static Map<String, String> propertiesToMap(Properties properties) {
+        Map<String, String> map = new HashMap<>();
+        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+            map.put(entry.getKey().toString(), entry.getValue().toString());
+        }
+        return map;
     }
 }

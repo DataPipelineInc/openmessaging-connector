@@ -32,9 +32,10 @@ public class SourcePositionCommitter {
      * @param workerSourceTask the workerSourceTask to submit.
      */
     public void schedule(ConnectorTaskId taskId, WorkerSourceTask workerSourceTask) {
+        long commitIntervalMs = this.workerConfig.getWorkerConfig().getLong(WorkerConfig.POSITION_COMMIT_INTERVAL_MS_CONFIG);
         ScheduledFuture future =
                 this.executorService.scheduleWithFixedDelay(
-                        workerSourceTask::commitPosition, 5, 5, TimeUnit.SECONDS);
+                        workerSourceTask::commitPosition, commitIntervalMs, commitIntervalMs, TimeUnit.MILLISECONDS);
         committers.put(taskId, future);
     }
 
@@ -69,7 +70,7 @@ public class SourcePositionCommitter {
      *
      * @param timeout
      */
-    public void shutdowm(long timeout) {
+    public void shutdown(long timeout) {
         this.executorService.shutdown();
         try {
             executorService.awaitTermination(timeout, TimeUnit.SECONDS);

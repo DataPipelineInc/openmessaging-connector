@@ -3,6 +3,7 @@ package io.openmessaging.connector.runtime.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import io.openmessaging.KeyValue;
 import io.openmessaging.connector.runtime.Processor;
 import io.openmessaging.connector.runtime.WorkerConfig;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
@@ -38,22 +39,20 @@ public class RestServer {
     }
 
     private void setConnector() {
-        getListeners(workerConfig)
-                .forEach(
-                        (hostname, port) -> {
-                            ServerConnector connector = new ServerConnector(server);
-                            connector.setName(String.format("%s:%s", hostname, port));
-                            connector.setHost(hostname);
-                            connector.setPort(port);
-                            this.server.addConnector(connector);
-                        });
+        getListeners(workerConfig).forEach(
+                (hostname, port) -> {
+                    ServerConnector connector = new ServerConnector(server);
+                    connector.setName(String.format("%s:%s", hostname, port));
+                    connector.setHost(hostname);
+                    connector.setPort(port);
+                    this.server.addConnector(connector);
+                });
     }
 
     private Map<String, Integer> getListeners(WorkerConfig workerConfig) {
+        KeyValue config = workerConfig.getWorkerConfig();
         Map<String, Integer> listeners = new HashMap<>();
-        listeners.put(
-                workerConfig.getRestConfig().getString(WorkerConfig.REST_HOSTNAME),
-                workerConfig.getRestConfig().getInt(WorkerConfig.REST_PORT));
+        listeners.put(config.getString(WorkerConfig.REST_HOSTNAME), config.getInt(WorkerConfig.REST_PORT));
         return listeners;
     }
 

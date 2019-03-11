@@ -2,6 +2,7 @@ package io.openmessaging.connector.runtime;
 
 import io.openmessaging.Message;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
+import io.openmessaging.connector.runtime.utils.ConvertUtils;
 import io.openmessaging.consumer.PullConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +38,7 @@ public class WorkerSinkTask extends WorkerTask {
         this.config = config;
         this.toConsume = new ArrayList<>();
         this.context =
-                new WorkerSinkTaskContext(pullConsumer, this.workerConfig.getTaskConfig());
+                new WorkerSinkTaskContext(pullConsumer, ConvertUtils.mapToKeyValue(config));
     }
 
     public void initialize() {
