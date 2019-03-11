@@ -84,10 +84,7 @@ public class WorkerSourceTask extends WorkerTask {
                 if (toSend.isEmpty()) {
                     continue;
                 }
-                if (!sendMessages()) {
-                    log.info("Failed to send this message batch");
-                    Thread.sleep(1000);
-                }
+                sendMessages();
             }
         } catch (InterruptedException ignore) {
         } finally {
