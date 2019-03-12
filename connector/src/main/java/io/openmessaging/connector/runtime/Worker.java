@@ -3,9 +3,11 @@ package io.openmessaging.connector.runtime;
 import io.openmessaging.KeyValue;
 import io.openmessaging.MessagingAccessPoint;
 import io.openmessaging.OMS;
+import io.openmessaging.OMSBuiltinKeys;
 import io.openmessaging.connector.api.Connector;
 import io.openmessaging.connector.api.PositionStorageReader;
 import io.openmessaging.connector.api.Task;
+import io.openmessaging.connector.api.sink.SinkTask;
 import io.openmessaging.connector.api.source.SourceTask;
 import io.openmessaging.connector.runtime.isolation.Plugins;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
@@ -14,6 +16,7 @@ import io.openmessaging.connector.runtime.rest.storage.PositionStorageService;
 import io.openmessaging.connector.runtime.storage.PositionStorageWriter;
 import io.openmessaging.connector.runtime.storage.SourcePositionCommitter;
 import io.openmessaging.connector.runtime.utils.ConvertUtils;
+import io.openmessaging.consumer.PullConsumer;
 import io.openmessaging.producer.Producer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,6 +187,17 @@ public class Worker {
                     positionStorageWriter,
                     taskConfig,
                     producer);
+        } else if (task instanceof SinkTask) {
+            PullConsumer pullConsumer = messagingAccessPoint.createPullConsumer(OMS.newKeyValue().put(OMSBuiltinKeys.CONSUMER_ID, taskId.getConnectorName()));
+            return new WorkerSinkTask(
+                    taskId,
+                    (SinkTask) task,
+                    targetState,
+                    statusListener,
+                    pullConsumer,
+                    this.workerConfig,
+                    taskConfig);
+
         }
         return null;
     }

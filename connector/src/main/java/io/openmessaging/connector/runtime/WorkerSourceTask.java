@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.openmessaging.KeyValue;
 import io.openmessaging.Message;
 import io.openmessaging.connector.api.PositionStorageReader;
+import io.openmessaging.connector.api.data.Schema;
 import io.openmessaging.connector.api.data.SourceDataEntry;
 import io.openmessaging.connector.api.source.SourceTask;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
@@ -101,11 +102,22 @@ public class WorkerSourceTask extends WorkerTask {
         int processed = 0;
         List<String> thisBatch = new ArrayList<>();
         for (SourceDataEntry dataEntry : toSend) {
-            Message message =
-                    this.producer.createBytesMessage(
-                            dataEntry.getQueueName(), ConvertUtils.getBytesfromObject(dataEntry.getPayload()));
             ByteBuffer sourcePartition = dataEntry.getSourcePartition();
             ByteBuffer sourcePosition = dataEntry.getSourcePosition();
+            String queuename = dataEntry.getQueueName();
+            Schema schema = dataEntry.getSchema();
+            Object[] body = new Object[dataEntry.getPayload().length + 4];
+            body[0] = queuename;
+            body[1] = sourcePartition;
+            body[2] = sourcePosition;
+            body[3] = schema;
+            for (int i = 4; i < body.length; i++) {
+                body[i] = dataEntry.getPayload()[i - 4];
+            }
+            Message message =
+                    this.producer.createBytesMessage(
+                            dataEntry.getQueueName(), ConvertUtils.getBytesfromObject(body));
+
             //If we fail to send, we will not re-add the failed message to the map, but send it directly again.
             synchronized (this) {
                 if (!lastFailed) {
