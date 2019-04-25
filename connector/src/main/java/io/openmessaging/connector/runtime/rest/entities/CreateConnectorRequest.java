@@ -1,26 +1,24 @@
 package io.openmessaging.connector.runtime.rest.entities;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.alibaba.fastjson.annotation.JSONCreator;
+import com.alibaba.fastjson.annotation.JSONField;
 import java.util.Map;
 
 public class CreateConnectorRequest {
-    private String name;
-    private Map<String, String> config;
+  private String name;
+  private Map<String, String> config;
 
-    @JsonCreator
-    public CreateConnectorRequest(
-            @JsonProperty("name") String name, @JsonProperty("config") Map<String, String> config) {
-        this.name = name;
-        this.config = config;
-    }
+  @JSONCreator
+  public CreateConnectorRequest(@JSONField String name, @JSONField Map<String, String> config) {
+    this.name = name;
+    this.config = config;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public Map<String, String> getConfig() {
-        return config;
-    }
+  public Map<String, String> getConfig() {
+    return config;
+  }
 }

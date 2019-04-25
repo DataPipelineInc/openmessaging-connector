@@ -5,8 +5,6 @@ import io.openmessaging.connector.api.TaskContext;
 
 public interface SourceTaskContext extends TaskContext {
 
-    /**
-     * Get the PositionStorageReader for this SourceTask.
-     */
-    PositionStorageReader offsetStorageReader();
+  /** Get the PositionStorageReader for this SourceTask. */
+  PositionStorageReader offsetStorageReader();
 }

@@ -6,27 +6,27 @@ package io.openmessaging.connector.runtime.rest.entities;
  * @param <T> ConnectorTaskId or String.
  */
 public abstract class AbstractStatus<T> {
-    private T id;
-    private State state;
+  private T id;
+  private State state;
 
-    public AbstractStatus(T id, State state) {
-        this.id = id;
-        this.state = state;
-    }
+  public AbstractStatus(T id, State state) {
+    this.id = id;
+    this.state = state;
+  }
 
-    public T getId() {
-        return id;
-    }
+  public T getId() {
+    return id;
+  }
 
-    public State getState() {
-        return state;
-    }
+  public State getState() {
+    return state;
+  }
 
-    public enum State {
-        UNASSIGNED,
-        RUNNING,
-        PAUSED,
-        FAILED,
-        DESTROYED
-    }
+  public enum State {
+    UNASSIGNED,
+    RUNNING,
+    PAUSED,
+    FAILED,
+    DESTROYED
+  }
 }

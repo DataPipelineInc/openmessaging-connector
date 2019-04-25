@@ -2,7 +2,6 @@ package io.openmessaging.connector.runtime.rest.storage;
 
 import io.openmessaging.connector.runtime.WorkerConfig;
 import io.openmessaging.connector.runtime.utils.CallBack;
-
 import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Map;
@@ -16,36 +15,32 @@ import java.util.concurrent.Future;
  */
 public interface PositionStorageService {
 
-    /**
-     * Start the position storage service.
-     */
-    void start();
+  /** Start the position storage service. */
+  void start();
 
-    /**
-     * Stop the position storage service.
-     */
-    void stop();
+  /** Stop the position storage service. */
+  void stop();
 
-    /**
-     * Config the position storage service with the given config.
-     *
-     * @param workerConfig the config of worker.
-     */
-    void initialize(WorkerConfig workerConfig);
+  /**
+   * Config the position storage service with the given config.
+   *
+   * @param workerConfig the config of worker.
+   */
+  void initialize(WorkerConfig workerConfig);
 
-    /**
-     * Save position to memory or persistence.
-     *
-     * @param values   The key of the map represents partition and the value represents position.
-     * @param callBack the callback after saving position
-     */
-    Future set(Map<ByteBuffer, ByteBuffer> values, CallBack<Void> callBack);
+  /**
+   * Save position to memory or persistence.
+   *
+   * @param values The key of the map represents partition and the value represents position.
+   * @param callBack the callback after saving position
+   */
+  Future set(Map<ByteBuffer, ByteBuffer> values, CallBack<Void> callBack);
 
-    /**
-     * Get position from memory or persistence.
-     *
-     * @param key      binary form of partition.
-     * @param callBack the callback after getting position
-     */
-    void get(Collection<ByteBuffer> key, CallBack<Map<ByteBuffer, ByteBuffer>> callBack);
+  /**
+   * Get position from memory or persistence.
+   *
+   * @param key binary form of partition.
+   * @param callBack the callback after getting position
+   */
+  void get(Collection<ByteBuffer> key, CallBack<Map<ByteBuffer, ByteBuffer>> callBack);
 }

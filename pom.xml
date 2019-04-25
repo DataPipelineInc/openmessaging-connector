@@ -14,8 +14,9 @@
     specific language governing permissions and limitations
     under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.openmessaging.connect</groupId>
@@ -48,6 +49,8 @@
         <lang3.version>3.6</lang3.version>
         <jetty.version>9.2.22.v20170606</jetty.version>
         <rocketmq.version>4.4.0</rocketmq.version>
+        <hikaricp.version>2.7.2</hikaricp.version>
+        <version.mysql.driver>5.1.39</version.mysql.driver>
     </properties>
 
     <build>
@@ -69,36 +72,36 @@
                     <optimize>true</optimize>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>com.mycila</groupId>
-                <artifactId>license-maven-plugin</artifactId>
-                <version>3.0</version>
-                <configuration>
-                    <header>dev/license-header.txt</header>
+            <!--<plugin>-->
+            <!--<groupId>com.mycila</groupId>-->
+            <!--<artifactId>license-maven-plugin</artifactId>-->
+            <!--<version>3.0</version>-->
+            <!--<configuration>-->
+            <!--<header>dev/license-header.txt</header>-->
 
-                    <excludes>
-                        <exclude>LICENSE</exclude>
-                        <exclude>NOTICE</exclude>
-                        <exclude>payload/**</exclude>
-                        <exclude>**/*.pyc</exclude>
-                        <exclude>**/.pydevproject</exclude>
-                    </excludes>
-                    <mapping>
-                        <benchmark>SCRIPT_STYLE</benchmark>
-                        <j2>SCRIPT_STYLE</j2>
-                        <conf>SCRIPT_STYLE</conf>
-                        <yaml>SCRIPT_STYLE</yaml>
-                        <md>XML_STYLE</md>
-                    </mapping>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            <!--<excludes>-->
+            <!--<exclude>LICENSE</exclude>-->
+            <!--<exclude>NOTICE</exclude>-->
+            <!--<exclude>payload/**</exclude>-->
+            <!--<exclude>**/*.pyc</exclude>-->
+            <!--<exclude>**/.pydevproject</exclude>-->
+            <!--</excludes>-->
+            <!--<mapping>-->
+            <!--<benchmark>SCRIPT_STYLE</benchmark>-->
+            <!--<j2>SCRIPT_STYLE</j2>-->
+            <!--<conf>SCRIPT_STYLE</conf>-->
+            <!--<yaml>SCRIPT_STYLE</yaml>-->
+            <!--<md>XML_STYLE</md>-->
+            <!--</mapping>-->
+            <!--</configuration>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<goals>-->
+            <!--<goal>check</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
+            <!--</plugin>-->
         </plugins>
     </build>
     <dependencyManagement>
@@ -139,9 +142,19 @@
                 <version>2.25.1</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.jaxrs</groupId>
-                <artifactId>jackson-jaxrs-json-provider</artifactId>
-                <version>2.9.1</version>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${version.mysql.driver}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>1.2.51</version>
+            </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikaricp.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.ws.rs</groupId>
