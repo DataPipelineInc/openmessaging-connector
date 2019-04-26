@@ -1,6 +1,7 @@
 package io.openmessaging.connector.runtime;
 
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
+import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -48,6 +49,8 @@ public abstract class WorkerTask implements Runnable {
         }
       }
       execute();
+    } catch (Exception e) {
+      throw new ConnectException(e);
     } finally {
       doClose();
     }

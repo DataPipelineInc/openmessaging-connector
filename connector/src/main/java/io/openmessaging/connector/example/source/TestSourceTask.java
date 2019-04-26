@@ -20,7 +20,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +40,7 @@ public class TestSourceTask extends SourceTask {
     List<SourceDataEntry> lists = new ArrayList<>();
     try {
       String sql = mySQLSourceInfo.buildSql();
-      ResultSet resultSet = jdbcConnect.execute(sql);
+      ResultSet resultSet = jdbcConnect.executeQuery(sql);
       while (resultSet.next()) {
         DataEntryBuilder builder = new DataEntryBuilder(schema);
         builder.queue("ab2");
@@ -48,17 +50,18 @@ public class TestSourceTask extends SourceTask {
           if (columnName.equals(mySQLSourceInfo.getOrderColumn())) {
             mySQLSourceInfo.updateSelectCondition(
                 String.format(
-                    "`%s`,`%s` > %s",
+                    "`%s`.`%s` > %s",
                     keyValue.getString(JdbcConfigKeys.TABLE_NAME),
                     keyValue.getString(JdbcConfigKeys.ORDER_COLUMN),
                     value));
           }
         }
+        Map<String, Object> position = new HashMap<>();
+        position.put("selectCondition", mySQLSourceInfo.getSelectCondition());
         lists.add(
             builder.buildSourceDataEntry(
                 ByteBuffer.wrap(ConvertUtils.getBytesfromObject("partition01")),
-                ByteBuffer.wrap(
-                    ConvertUtils.getBytesfromObject(mySQLSourceInfo.getSelectCondition()))));
+                ByteBuffer.wrap(ConvertUtils.getBytesfromObject(position))));
       }
 
     } catch (SQLException e) {

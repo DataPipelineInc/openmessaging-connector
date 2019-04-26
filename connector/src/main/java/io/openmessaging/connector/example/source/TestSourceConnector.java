@@ -39,7 +39,7 @@ public class TestSourceConnector extends SourceConnector {
               }
             });
     if (missingKeys.isEmpty()) {
-      config.put(TaskConfig.TASK_CLASS_CONFIG, TestSourceTask.class.getName());
+      this.config.put(TaskConfig.TASK_CLASS_CONFIG, TestSourceTask.class.getName());
       return null;
     } else {
       return String.format("The following keys is missing : ", missingKeys.toString());

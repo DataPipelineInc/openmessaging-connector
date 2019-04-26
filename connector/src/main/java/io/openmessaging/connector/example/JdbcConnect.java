@@ -37,8 +37,18 @@ public abstract class JdbcConnect {
     hikariDataSource = new HikariDataSource(hikariConfig);
   }
 
-  public ResultSet execute(String sql) {
-    try (Connection connection = hikariDataSource.getConnection()) {
+  public void execute(String sql){
+    try(Connection connection = hikariDataSource.getConnection()) {
+      Statement statement = connection.createStatement();
+      statement.execute(sql);
+    } catch (SQLException e) {
+      throw new ConnectException(e);
+    }
+  }
+
+  public ResultSet executeQuery(String sql) {
+    try  {
+      Connection connection = hikariDataSource.getConnection();
       Statement statement = connection.createStatement();
       return statement.executeQuery(sql);
     } catch (SQLException e) {

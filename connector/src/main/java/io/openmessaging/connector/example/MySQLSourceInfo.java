@@ -12,6 +12,7 @@ public class MySQLSourceInfo {
   public MySQLSourceInfo(TableId tableId, String orderColumn) {
     this.tableId = tableId;
     this.orderColumn = orderColumn;
+    this.selectCondition = new AtomicReference<>();
   }
 
   public TableId getTableId() {
@@ -40,7 +41,7 @@ public class MySQLSourceInfo {
     if (StringUtils.isNoneBlank(condition)) {
       sqlBuilder.append(" WHERE ").append(condition);
     }
-    sqlBuilder.append("order by `" + this.orderColumn + "` ASC");
+    sqlBuilder.append(" order by `" + this.orderColumn + "` ASC");
     return sqlBuilder.toString();
   }
 }
