@@ -66,7 +66,7 @@ public class MemoryPositionStorage implements PositionStorageService {
   public void save() {
     for (Map.Entry<ByteBuffer, ByteBuffer> entry : positions.entrySet()) {
       log.info(
-          "Partition : {} , Position : {} ",
+          "MemoryPositionStorage : Partition : {} , Position : {} ",
           new String(entry.getKey().array()),
           new String(entry.getValue().array()));
     }
