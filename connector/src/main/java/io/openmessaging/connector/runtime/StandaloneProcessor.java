@@ -9,6 +9,7 @@ import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStatus;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorType;
+import io.openmessaging.connector.runtime.rest.entities.MessageSystem;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
 import io.openmessaging.connector.runtime.rest.entities.TaskStatus;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
@@ -37,11 +38,13 @@ public class StandaloneProcessor extends AbstractProcessor {
   private TaskStatusListener taskStatusListener;
   private ClusterStateConfig stateConfig;
   private Worker worker;
+  private MessageSystem versionInfo;
 
   public StandaloneProcessor(
       ConfigStorageService configStorageService,
       StatusStorageService statusStorageService,
-      Worker worker) {
+      Worker worker,
+      MessageSystem versionInfo) {
     this.configStorageService = configStorageService;
     this.statusStorageService = statusStorageService;
     this.configListener = new ConfigChangeListener();
@@ -51,6 +54,7 @@ public class StandaloneProcessor extends AbstractProcessor {
     this.worker = worker;
     this.tempConnector = new HashMap<>();
     this.configStorageService.setConfigListener(this.configListener);
+    this.versionInfo = versionInfo;
   }
 
   @Override
@@ -425,5 +429,10 @@ public class StandaloneProcessor extends AbstractProcessor {
       statusStorageService.put(
           connectorOrTaskId, new TaskStatus(connectorOrTaskId, AbstractStatus.State.FAILED));
     }
+  }
+
+  @Override
+  public MessageSystem getInfo() {
+    return versionInfo;
   }
 }

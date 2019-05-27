@@ -5,6 +5,7 @@ import io.openmessaging.connector.runtime.Processor;
 import io.openmessaging.connector.runtime.WorkerConfig;
 import io.openmessaging.connector.runtime.rest.error.ConnectException;
 import io.openmessaging.connector.runtime.rest.resources.ConnectorsResource;
+import io.openmessaging.connector.runtime.rest.resources.RootResource;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.jetty.server.Handler;
@@ -60,6 +61,7 @@ public class RestServer {
     ResourceConfig resourceConfig = new ResourceConfig();
 
     resourceConfig.register(new ConnectorsResource(processor));
+    resourceConfig.register(new RootResource(processor));
 
     ServletContainer servletContainer = new ServletContainer(resourceConfig);
     ServletHolder servletHolder = new ServletHolder(servletContainer);

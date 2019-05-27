@@ -37,8 +37,8 @@ public abstract class JdbcConnect {
     hikariDataSource = new HikariDataSource(hikariConfig);
   }
 
-  public void execute(String sql){
-    try(Connection connection = hikariDataSource.getConnection()) {
+  public void execute(String sql) {
+    try (Connection connection = hikariDataSource.getConnection()) {
       Statement statement = connection.createStatement();
       statement.execute(sql);
     } catch (SQLException e) {
@@ -46,13 +46,27 @@ public abstract class JdbcConnect {
     }
   }
 
-  public ResultSet executeQuery(String sql) {
-    try  {
-      Connection connection = hikariDataSource.getConnection();
-      Statement statement = connection.createStatement();
-      return statement.executeQuery(sql);
+  public void executeQuery(String sql, JdbcResultSetConsumer consumer) {
+    Connection connection = null;
+    Statement statement = null;
+    try {
+      connection = hikariDataSource.getConnection();
+      statement = connection.createStatement();
+      ResultSet resultSet = statement.executeQuery(sql);
+      consumer.accept(resultSet);
     } catch (SQLException e) {
       throw new ConnectException(e);
+    } finally {
+      try {
+        if (statement != null) {
+          statement.close();
+        }
+        if (connection != null) {
+          connection.close();
+        }
+      } catch (SQLException e) {
+        log.error(e.getMessage());
+      }
     }
   }
 
@@ -71,6 +85,7 @@ public abstract class JdbcConnect {
   public abstract String getJdbcUrl(String endpoint, Integer port, String database);
 
   public abstract List<String> readColumns(TableId tableId);
+
   public static class JdbcConfig {
     private String endpoint;
     private Integer port;

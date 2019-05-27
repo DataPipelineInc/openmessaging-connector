@@ -138,8 +138,6 @@ public class WorkerSourceTask extends WorkerTask {
         }
       }
       try {
-        // TODO Asynchronously send a message, according to callBack to determine whether the
-        // message is sent successfully.
         this.producer.send(message);
         commitMessage(dataEntry);
         processed++;

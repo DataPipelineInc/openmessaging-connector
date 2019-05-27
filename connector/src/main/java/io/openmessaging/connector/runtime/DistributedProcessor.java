@@ -3,6 +3,7 @@ package io.openmessaging.connector.runtime;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorStateInfo;
 import io.openmessaging.connector.runtime.rest.entities.ConnectorTaskId;
+import io.openmessaging.connector.runtime.rest.entities.MessageSystem;
 import io.openmessaging.connector.runtime.rest.entities.TaskInfo;
 import io.openmessaging.connector.runtime.utils.CallBack;
 import java.util.List;
@@ -58,4 +59,9 @@ public class DistributedProcessor extends AbstractProcessor {
 
   @Override
   public void resumeConnector(String connector) {}
+
+  @Override
+  public MessageSystem getInfo() {
+    return null;
+  }
 }

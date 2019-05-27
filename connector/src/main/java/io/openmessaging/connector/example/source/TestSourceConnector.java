@@ -25,6 +25,7 @@ public class TestSourceConnector extends SourceConnector {
     keys.add(JdbcConfigKeys.JDBC_PASSWORD);
     keys.add(JdbcConfigKeys.TABLE_NAME);
     keys.add(JdbcConfigKeys.ORDER_COLUMN);
+    keys.add(TaskConfig.TASK_TOPICS_CONFIG);
   }
 
   @Override

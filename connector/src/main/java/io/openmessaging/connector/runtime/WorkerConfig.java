@@ -21,6 +21,8 @@ public class WorkerConfig {
       "position.commit.timeout.ms.config";
   public static final String TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS_CONFIG =
       "task.shutdown.graceful.timeout.ms.config";
+  public static final String MESSAGE_SYSTEM_NAME = "message.system.name";
+  public static final String MESSAGE_SYSTEM_VERSION = "message.system.version";
   private static Set<String> allConfig = new HashSet<>();
 
   static {
@@ -30,6 +32,8 @@ public class WorkerConfig {
     allConfig.add(POSITION_COMMIT_INTERVAL_MS_CONFIG);
     allConfig.add(POSITION_COMMIT_TIMEOUT_MS_CONFIG);
     allConfig.add(TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS_CONFIG);
+    allConfig.add(MESSAGE_SYSTEM_NAME);
+    allConfig.add(MESSAGE_SYSTEM_VERSION);
   }
 
   private KeyValue workerConfig = OMS.newKeyValue();
@@ -44,11 +48,10 @@ public class WorkerConfig {
   private Set<String> verifyAndPadding(Map<String, String> config) {
     Set<String> missingConfig = new HashSet<>();
     for (Map.Entry<String, String> entry : config.entrySet()) {
-      if (allConfig.contains(entry.getKey())) {
-        this.workerConfig.put(entry.getKey(), entry.getValue());
-      } else {
+      if (!allConfig.contains(entry.getKey())) {
         missingConfig.add(entry.getKey());
       }
+      this.workerConfig.put(entry.getKey(), entry.getValue());
     }
     return missingConfig;
   }

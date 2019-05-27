@@ -1,7 +1,6 @@
 package io.openmessaging.connector.example.source;
 
 import io.openmessaging.KeyValue;
-import io.openmessaging.connector.api.data.DataEntryBuilder;
 import io.openmessaging.connector.api.data.Field;
 import io.openmessaging.connector.api.data.FieldType;
 import io.openmessaging.connector.api.data.Schema;
@@ -10,19 +9,17 @@ import io.openmessaging.connector.api.source.SourceTask;
 import io.openmessaging.connector.example.JdbcConfigKeys;
 import io.openmessaging.connector.example.JdbcConnect;
 import io.openmessaging.connector.example.JdbcConnect.JdbcConfig;
+import io.openmessaging.connector.example.JdbcReader;
 import io.openmessaging.connector.example.MySQLConnect;
 import io.openmessaging.connector.example.MySQLSourceInfo;
 import io.openmessaging.connector.example.TableId;
-import io.openmessaging.connector.runtime.rest.error.ConnectException;
-import io.openmessaging.connector.runtime.utils.ConvertUtils;
-import java.nio.ByteBuffer;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,39 +31,14 @@ public class TestSourceTask extends SourceTask {
   private KeyValue keyValue;
   private List<String> columnNames;
   private Schema schema;
+  private ScheduledExecutorService executorService;
+  private List<SourceDataEntry> lists = new LinkedList<>();
+  private JdbcReader jdbcReader;
 
   @Override
   public Collection<SourceDataEntry> poll() {
-    List<SourceDataEntry> lists = new ArrayList<>();
-    try {
-      String sql = mySQLSourceInfo.buildSql();
-      ResultSet resultSet = jdbcConnect.executeQuery(sql);
-      while (resultSet.next()) {
-        DataEntryBuilder builder = new DataEntryBuilder(schema);
-        builder.queue("ab2");
-        for (String columnName : columnNames) {
-          String value = resultSet.getString(columnName);
-          builder.putFiled(columnName, value);
-          if (columnName.equals(mySQLSourceInfo.getOrderColumn())) {
-            mySQLSourceInfo.updateSelectCondition(
-                String.format(
-                    "`%s`.`%s` > %s",
-                    keyValue.getString(JdbcConfigKeys.TABLE_NAME),
-                    keyValue.getString(JdbcConfigKeys.ORDER_COLUMN),
-                    value));
-          }
-        }
-        Map<String, Object> position = new HashMap<>();
-        position.put("selectCondition", mySQLSourceInfo.getSelectCondition());
-        lists.add(
-            builder.buildSourceDataEntry(
-                ByteBuffer.wrap(ConvertUtils.getBytesfromObject("partition01")),
-                ByteBuffer.wrap(ConvertUtils.getBytesfromObject(position))));
-      }
-
-    } catch (SQLException e) {
-      throw new ConnectException(e);
-    }
+    List<SourceDataEntry> lists = new LinkedList<>(this.lists);
+    this.lists.clear();
     return lists;
   }
 
@@ -95,21 +67,32 @@ public class TestSourceTask extends SourceTask {
       fields.add(new Field(i, columnNames.get(i), FieldType.STRING));
     }
     schema.setFields(fields);
+    doStart();
+  }
+
+  private void doStart() {
+    executorService = Executors.newScheduledThreadPool(5);
+    jdbcReader =
+        new JdbcReader(columnNames, mySQLSourceInfo, jdbcConnect, schema, keyValue, lists::add);
+    executorService.scheduleAtFixedRate(jdbcReader, 0, 10, TimeUnit.SECONDS);
   }
 
   @Override
   public void stop() {
+    executorService.shutdown();
     jdbcConnect.close();
     log.info("This task has stopped");
   }
 
   @Override
   public void pause() {
+    jdbcReader.pause();
     log.info("This task has paused");
   }
 
   @Override
   public void resume() {
+    jdbcReader.resume();
     log.info("This task has resumed");
   }
 }
